@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Addon Author="Darkjaguar" APIVersion="8" Name="Serenity_Bags" Description="A Bag replacement mod that sorts items according to item type and has allot more special features!">
+    <Script Name="Serenity_Bags.lua"/>
+    <Form Name="Serenity_Bags.xml"/>
+</Addon>
