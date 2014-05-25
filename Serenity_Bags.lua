@@ -9,15 +9,6 @@ require "Window"
 -- Serenity_Bags Module Definition
 -----------------------------------------------------------------------------------------------
 local Serenity_Bags = {} 
-<<<<<<< HEAD
-local Serenity_BagContainer = {}
- 
------------------------------------------------------------------------------------------------
--- Constants
------------------------------------------------------------------------------------------------
--- e.g. local kiExampleVariableMax = 999
- 
-=======
 local Serenity_BagContainer = {
 	itemsPerRow = 5,
 }
@@ -34,7 +25,6 @@ local ItemQualityToColor = {
 	"ffff8888",
 }
 
->>>>>>> 8668392f2f7643b98979cfbacc9e15577edcaf3a
 -----------------------------------------------------------------------------------------------
 -- Initialization
 -----------------------------------------------------------------------------------------------
@@ -44,10 +34,7 @@ function Serenity_Bags:new(o)
     self.__index = self 
 
     -- initialize variables here
-<<<<<<< HEAD
-=======
 	self.vendorOpen = false
->>>>>>> 8668392f2f7643b98979cfbacc9e15577edcaf3a
 
     return o
 end
@@ -56,10 +43,6 @@ function Serenity_Bags:Init()
 	local bHasConfigureFunction = false
 	local strConfigureButtonText = ""
 	local tDependencies = {
-<<<<<<< HEAD
-		-- "UnitOrPackageName",
-=======
->>>>>>> 8668392f2f7643b98979cfbacc9e15577edcaf3a
 	}
     Apollo.RegisterAddon(self, bHasConfigureFunction, strConfigureButtonText, tDependencies)
 end
@@ -68,12 +51,7 @@ end
 -----------------------------------------------------------------------------------------------
 -- Serenity_Bags OnLoad
 -----------------------------------------------------------------------------------------------
-<<<<<<< HEAD
-function Serenity_Bags:OnLoad()
-    -- load our form file
-=======
 function Serenity_Bags:OnLoad()	
->>>>>>> 8668392f2f7643b98979cfbacc9e15577edcaf3a
 	self.xmlDoc = XmlDoc.CreateFromFile("Serenity_Bags.xml")
 	self.xmlDoc:RegisterCallback("OnDocLoaded", self)
 end
@@ -90,10 +68,6 @@ function Serenity_Bags:OnDocLoaded()
 		
 		self.bags = {}
 		
-<<<<<<< HEAD
-		
-		Apollo.RegisterSlashCommand("bag", "ShowBags", self)
-=======
 		Apollo.RegisterSlashCommand("bag", "ShowBags", self)
 		Apollo.RegisterEventHandler("InvokeVendorWindow", "VendorWindowOpen", self)
 		Apollo.RegisterEventHandler("CloseVendorWindow", "VendorWindowClosed", self)
@@ -104,18 +78,12 @@ function Serenity_Bags:OnDocLoaded()
 		Apollo.RegisterEventHandler("ShowInventory",	"ShowBags", self)
 		Apollo.RegisterEventHandler("PlayerCurrencyChanged",	"ResetMainBag", self)
 		Apollo.RegisterEventHandler("LootedItem",	"ResetBags", self)
->>>>>>> 8668392f2f7643b98979cfbacc9e15577edcaf3a
 	end
 end
 
 -----------------------------------------------------------------------------------------------
 -- Serenity_Bags Functions
 -----------------------------------------------------------------------------------------------
-<<<<<<< HEAD
-function Serenity_Bags:DestroyBags()
-	for i, v in pairs(self.bags) do
-		v:Show(false)
-=======
 function Serenity_Bags:VendorWindowOpen()
 	self.vendorOpen = true
 end
@@ -126,7 +94,6 @@ end
 
 function Serenity_Bags:DestroyBags()
 	for i, v in pairs(self.bags) do
->>>>>>> 8668392f2f7643b98979cfbacc9e15577edcaf3a
 		v:Destroy()
 		v = nil	
 	end
@@ -134,20 +101,6 @@ function Serenity_Bags:DestroyBags()
 	self.bags = {}
 end
 
-<<<<<<< HEAD
-function Serenity_Bags:ShowBags()
-	self:DestroyBags() -- kill all currently shown bags
-	
-	if self.mainBag:IsVisible() then
-		self.mainBag:Show(false)
-	else
-		self.mainBag:Show(true)
-	end
-end
------------------------------------------------------------------------------------------------
--- Serenity_BagContainer
------------------------------------------------------------------------------------------------
-=======
 function Serenity_Bags:CollectBagItems()
 	local items = GameLib.GetPlayerUnit():GetInventoryItems()
 	
@@ -279,7 +232,6 @@ end
 ---------------------------------------------------------------------------------------------------
 -- BagContainer function
 ---------------------------------------------------------------------------------------------------
->>>>>>> 8668392f2f7643b98979cfbacc9e15577edcaf3a
 
 function Serenity_BagContainer:new(o)
     o = o or {}
@@ -289,14 +241,6 @@ function Serenity_BagContainer:new(o)
     return o
 end
 
-<<<<<<< HEAD
-function Serenity_BagContainer:Init(parent)
-	self.parent = parent
-
-	self.frame = Apollo.LoadForm(parent.xmlDoc, "BagContainer", nil, self)
-end
-
-=======
 function Serenity_BagContainer:Init(parent, params)
 	self.par = parent
 
@@ -384,7 +328,6 @@ function Serenity_BagContainer:Destroy()
 	self.frame:Destroy()
 	self.frame = nil
 end
->>>>>>> 8668392f2f7643b98979cfbacc9e15577edcaf3a
 
 -----------------------------------------------------------------------------------------------
 -- Serenity_Bags Instance
