@@ -76,7 +76,7 @@ function Serenity_Bags:OnDocLoaded()
 		Apollo.RegisterEventHandler("GuildBank_ShowPersonalInventory",	"ShowBags", self)
 		Apollo.RegisterEventHandler("ToggleInventory",	"ToggleBags", self)
 		Apollo.RegisterEventHandler("ShowInventory",	"ShowBags", self)
-		Apollo.RegisterEventHandler("PlayerCurrencyChanged",	"ResetMainBag", self)
+		Apollo.RegisterEventHandler("PlayerCurrencyChanged",	"ResetBags", self)
 		Apollo.RegisterEventHandler("LootedItem",	"ResetBags", self)
 	end
 end
@@ -115,7 +115,7 @@ function Serenity_Bags:CollectBagItems()
 		
 		table.insert(categories[category], v)
 	end
-	
+		
 	return categories
 end
 
@@ -142,6 +142,10 @@ function Serenity_Bags:ShowBags()
 end
 
 function Serenity_Bags:ResetBags()
+	self:DestroyBags()
+	
+	self:ResetMainBag()
+	
 	if self.mainBag:IsVisible() then
 		local categories = self:CollectBagItems()
 		
@@ -168,7 +172,7 @@ end
 
 function Serenity_Bags:ArrangeBagContainers()
 	table.sort(self.bags, function(a,b)
-		return string.lower(a:GetCategory()) < string.lower(b:GetCategory())
+		return string.lower(a:GetCategory()) > string.lower(b:GetCategory())
 	end)
 	
 	local x = -5
