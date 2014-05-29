@@ -76,7 +76,7 @@ function Serenity_Bags:OnDocLoaded()
 		Apollo.RegisterEventHandler("GuildBank_ShowPersonalInventory",	"ShowBags", self)
 		Apollo.RegisterEventHandler("ToggleInventory",	"ToggleBags", self)
 		Apollo.RegisterEventHandler("ShowInventory",	"ShowBags", self)
-		Apollo.RegisterEventHandler("PlayerCurrencyChanged",	"ResetBags", self)
+		Apollo.RegisterEventHandler("PlayerCurrencyChanged",	"ResetMainBag", self)
 		Apollo.RegisterEventHandler("LootedItem",	"ResetBags", self)
 	end
 end
@@ -272,6 +272,7 @@ function Serenity_BagContainer:SetItems(items)
 		local y = v.nBagSlot * 51
 		
 		itm:FindChild("BItm"):SetAnchorOffsets(0, -y, 0, 0)
+		_G["itm"] = v;
 	end
 	
 	self:SizeToFit()
