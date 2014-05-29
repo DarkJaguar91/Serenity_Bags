@@ -199,30 +199,15 @@ end
 -- Tooltip Functions
 ---------------------------------------------------------------------------------------------------
 
-function Serenity_BagContainer:ItemHover( wndHandler, wndControl, eToolTipType, x, y )
-	if (wndHandler ~= wndControl) then return end
-
-	local itm = wndHandler:GetData()
-	if not itm then
-		itm = wndControl:GetData()
-	end
-	
+function Serenity_BagContainer:ItemHover( wndControl, wndHandler, tType, item)
+	if wndControl ~= wndHandler then return end
 	wndControl:SetTooltipDoc(nil)
-	Tooltip.GetItemTooltipForm(self, wndControl, itm.itemInBag, {bPrimary = true, bSelling = false})
-end
-
-function Serenity_BagContainer:OnItemMouseButtonUp( wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY )
-	if (wndControl ~= wndHandler) then return end
-	
-	if (self.par.vendorOpen) then
-		if (eMouseButton == GameLib.CodeEnumInputMouse.Right) then
-			local item = wndControl:GetData()
-		
-			SellItemToVendor(item.nBagSlot, 1)
-		end
+	if item ~= nil then
+		local itemEquipped = item:GetEquippedItemForItemType()
+		Tooltip.GetItemTooltipForm(self, wndControl, item, {bPrimary = true, bSelling = false, itemCompare = itemEquipped})
+		-- Tooltip.GetItemTooltipForm(self, wndControl, itemEquipped, {bPrimary = false, bSelling = false, itemCompare = item})
 	end
 end
-
 
 function Serenity_Bags:BagItemHover( wndHandler, wndControl, eToolTipType, x, y )
 	if (wndHandler ~= wndControl) then return end
@@ -284,19 +269,9 @@ function Serenity_BagContainer:SetItems(items)
 	for i, v in pairs(items) do
 		local itm = Apollo.LoadForm(self.par.xmlDoc, "BagItem", self.frame:FindChild("ItemFrame"), self)
 		
-		itm:FindChild("Sprite"):SetSprite(v.itemInBag:GetIcon()) 
+		local y = v.nBagSlot * 51
 		
-		itm:SetBGColor(ItemQualityToColor[v.itemInBag:GetItemQuality()])
-		
-		if v.itemInBag:GetStackCount() > 1 then
-			itm:FindChild("Number"):SetText(tostring(v.itemInBag:GetStackCount()))
-			itm:FindChild("Number"):Show(true)
-		else
-			itm:FindChild("Number"):Show(false)		
-		end
-		
-		itm:SetData(v)
-		_G["itm"] = itm
+		itm:FindChild("BItm"):SetAnchorOffsets(0, -y, 0, 0)
 	end
 	
 	self:SizeToFit()
