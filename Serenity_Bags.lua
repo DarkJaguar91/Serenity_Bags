@@ -10,7 +10,7 @@ require "Window"
 -----------------------------------------------------------------------------------------------
 local Serenity_Bags = {} 
 local Serenity_BagContainer = {
-	itemsPerRow = 5,
+	itemsPerRow = 4,
 }
 -----------------------------------------------------------------------------------------------
 -- Constants
@@ -145,6 +145,17 @@ function Serenity_Bags:ResetBagItems()
 			table.insert(self.bags, bag)
 		end
 		
+		_G["qst"] = Item.GetVirtualItems()
+		local questItems = Item.GetVirtualItems()
+		if (#questItems > 0) then
+			local bag = Serenity_BagContainer:new()
+			
+			bag:Init(self, {"Quest", questItems})
+			
+			table.insert(self.bags, bag)
+		end
+		
+				
 		self:ArrangeBagContainers()
 	end
 end
@@ -178,7 +189,7 @@ function Serenity_Bags:ArrangeBagContainers()
 		
 		x = x-w
 		
-		if (x < (l)) then
+		if (x < (l-w/2)) then
 			x = r
 			y = y - mH
 			mH = 0
@@ -231,7 +242,11 @@ function Serenity_BagContainer:Init(parent, params)
 	end
 	
 	if (params[2]) then
-		self:SetItems(params[2])
+		if (params[1] == "Quest") then
+			self:SetQuestItems(params[2])
+		else 
+			self:SetItems(params[2])
+		end
 	end
 end
 
@@ -248,6 +263,31 @@ function Serenity_BagContainer:SetPosition(anchors, offsets)
 	self.frame:SetAnchorOffsets(unpack(offsets))
 end
 
+function Serenity_BagContainer:SetQuestItems(items)
+	table.sort(items, function(a, b) 
+		return string.lower(a.itemInBag:GetName()) < string.lower(b.itemInBag:GetName())
+	end)
+	
+	self.items = items
+	
+	for i,v in pairs(items) do
+		local itm = Apollo.LoadForm(self.par.xmlDoc, "QuestItem", self.frame:FindChild("ItemFrame"), self)
+		
+		itm:FindChild("Sprite"):SetSprite(v.strIcon)
+		itm:FindChild("Count"):SetText(v.nCount)
+		itm:SetTooltip(string.format("<P Font=\"CRB_InterfaceSmall\">%s</P><P Font=\"CRB_InterfaceSmall\" TextColor=\"aaaaaaaa\">%s</P>", v.strName, v.strFlavor))
+
+		if (v.nCount > 1) then
+			itm:FindChild("Count"):Show(true)
+		else
+			itm:FindChild("Count"):Show(false)
+		end
+	end
+	
+	self:SizeToFit()
+	self.frame:FindChild("ItemFrame"):ArrangeChildrenTiles()
+end
+
 function Serenity_BagContainer:SetItems(items)
 	table.sort(items, function(a, b) 
 		return string.lower(a.itemInBag:GetName()) < string.lower(b.itemInBag:GetName())
@@ -261,7 +301,6 @@ function Serenity_BagContainer:SetItems(items)
 		local y = v.nBagSlot * 51
 		
 		itm:FindChild("BItm"):SetAnchorOffsets(0, -y, 0, 0)
-		_G["itm"] = v;
 	end
 	
 	self:SizeToFit()
@@ -302,8 +341,14 @@ end
 -- MainBagForm Functions
 ---------------------------------------------------------------------------------------------------
 
-function Serenity_Bags:TestDragDrop( wndHandler, wndControl, x, y, wndSource, strType, iData, bDragDropHasBeenReset )
+function Serenity_Bags:MoveFrames( wndHandler, wndControl, x, y, wndSource, strType, iData, bDragDropHasBeenReset )
 	self:ArrangeBagContainers()
+end
+
+function Serenity_Bags:ToggleTradeSkillBag( wndHandler, wndControl, eMouseButton )
+	local tAnchors = {}
+	tAnchors.nLeft, tAnchors.nTop, tAnchors.nRight, tAnchors.nBottom = self.mainBag:GetAnchorOffsets()
+	Event_FireGenericEvent("ToggleTradeskillInventoryFromBag", tAnchors)
 end
 
 -----------------------------------------------------------------------------------------------
