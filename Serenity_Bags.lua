@@ -15,15 +15,6 @@ local Serenity_BagContainer = {
 -----------------------------------------------------------------------------------------------
 -- Constants
 -----------------------------------------------------------------------------------------------
-local ItemQualityToColor = {
-	"ff333333",
-	"ffffffff",
-	"ff00ff00",
-	"ff0000ff",
-	"ffff00ff",
-	"ffffff00",
-	"ffff8888",
-}
 
 -----------------------------------------------------------------------------------------------
 -- Initialization
@@ -69,28 +60,27 @@ function Serenity_Bags:OnDocLoaded()
 		self.bags = {}
 		
 		Apollo.RegisterSlashCommand("bag", "ShowBags", self)
-		Apollo.RegisterEventHandler("InvokeVendorWindow", "VendorWindowOpen", self)
-		Apollo.RegisterEventHandler("CloseVendorWindow", "VendorWindowClosed", self)
-		Apollo.RegisterEventHandler("PersonaUpdateCharacterStats",	"ResetBags", self)
+
+		Apollo.RegisterEventHandler("ToggleInventory",	"ToggleBags", self)
 		Apollo.RegisterEventHandler("InterfaceMenu_ToggleInventory", "ToggleBags", self)
 		Apollo.RegisterEventHandler("GuildBank_ShowPersonalInventory",	"ShowBags", self)
-		Apollo.RegisterEventHandler("ToggleInventory",	"ToggleBags", self)
 		Apollo.RegisterEventHandler("ShowInventory",	"ShowBags", self)
-		Apollo.RegisterEventHandler("PlayerCurrencyChanged",	"ResetMainBag", self)
-		Apollo.RegisterEventHandler("LootedItem",	"ResetBags", self)
+		
+		Apollo.RegisterEventHandler("PersonaUpdateCharacterStats", "ResetAllBags", self)
+		Apollo.RegisterEventHandler("PlayerCurrencyChanged",	"ResetAllBags", self)
+
+		Apollo.RegisterEventHandler("LootedItem",	"ResetBagItems", self)
+		Apollo.RegisterEventHandler("ChallengeUpdated", "ResetBagItems", self)
+		Apollo.RegisterEventHandler("PlayerPathMissionUpdate", "ResetBagItems", self)
+		Apollo.RegisterEventHandler("QuestObjectiveUpdated", "ResetBagItems", self)
+		Apollo.RegisterEventHandler("PlayerPathRefresh", "ResetBagItems", self)
+		Apollo.RegisterEventHandler("QuestStateChanged", "ResetBagItems", self)
 	end
 end
 
 -----------------------------------------------------------------------------------------------
 -- Serenity_Bags Functions
 -----------------------------------------------------------------------------------------------
-function Serenity_Bags:VendorWindowOpen()
-	self.vendorOpen = true
-end
-
-function Serenity_Bags:VendorWindowClosed()
-	self.vendorOpen = false
-end
 
 function Serenity_Bags:DestroyBags()
 	for i, v in pairs(self.bags) do
@@ -120,9 +110,8 @@ function Serenity_Bags:CollectBagItems()
 end
 
 function Serenity_Bags:ToggleBags()
-	self:DestroyBags()
-	
 	if self.mainBag:IsVisible() then
+		self:DestroyBags()
 		self.mainBag:Close()
 	else
 		self:ShowBags()
@@ -134,18 +123,17 @@ function Serenity_Bags:ShowBags()
 	
 	self.mainBag:Show(true)
 	
-	-- reset mainBagData
-	self:ResetMainBag()	
-	
-	-- create bags
-	self:ResetBags()
+	self:ResetAllBags()
 end
 
-function Serenity_Bags:ResetBags()
-	self:DestroyBags()
-	
+function Serenity_Bags:ResetAllBags()
 	self:ResetMainBag()
-	
+	self:ResetBagItems()
+end
+
+function Serenity_Bags:ResetBagItems()
+	self:DestroyBags()
+		
 	if self.mainBag:IsVisible() then
 		local categories = self:CollectBagItems()
 		
@@ -175,8 +163,10 @@ function Serenity_Bags:ArrangeBagContainers()
 		return string.lower(a:GetCategory()) > string.lower(b:GetCategory())
 	end)
 	
-	local x = -5
-	local y = -55
+	local l, t, r, b = self.mainBag:GetAnchorOffsets()
+	
+	local x = r
+	local y = t
 	
 	local mH = 0
 	
@@ -188,8 +178,8 @@ function Serenity_Bags:ArrangeBagContainers()
 		
 		x = x-w
 		
-		if (x < -500) then
-			x = -5
+		if (x < (l)) then
+			x = r
 			y = y - mH
 			mH = 0
 		end
@@ -205,7 +195,6 @@ function Serenity_BagContainer:ItemHover( wndControl, wndHandler, tType, item)
 	if item ~= nil then
 		local itemEquipped = item:GetEquippedItemForItemType()
 		Tooltip.GetItemTooltipForm(self, wndControl, item, {bPrimary = true, bSelling = false, itemCompare = itemEquipped})
-		-- Tooltip.GetItemTooltipForm(self, wndControl, itemEquipped, {bPrimary = false, bSelling = false, itemCompare = item})
 	end
 end
 
@@ -307,6 +296,14 @@ end
 function Serenity_BagContainer:Destroy()
 	self.frame:Destroy()
 	self.frame = nil
+end
+
+---------------------------------------------------------------------------------------------------
+-- MainBagForm Functions
+---------------------------------------------------------------------------------------------------
+
+function Serenity_Bags:TestDragDrop( wndHandler, wndControl, x, y, wndSource, strType, iData, bDragDropHasBeenReset )
+	self:ArrangeBagContainers()
 end
 
 -----------------------------------------------------------------------------------------------
