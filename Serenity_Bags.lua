@@ -55,7 +55,13 @@ function Serenity_Bags:OnDocLoaded()
 	if self.xmlDoc ~= nil and self.xmlDoc:IsLoaded() then
 		
 	    self.mainBag = Apollo.LoadForm(self.xmlDoc, "MainBagForm", nil, self)
-	    self.mainBag:Show(false, true)		
+	    self.mainBag:Show(false, true)
+	
+		self.deleteWindow = Apollo.LoadForm(self.xmlDoc, "InventoryDeleteNotice", nil, self)
+		self.deleteWindow:Show(false, true)
+		
+		self.salvageWindow = Apollo.LoadForm(self.xmlDoc, "InventorySalvageNotice", nil, self)
+		self.salvageWindow :Show(false, true)
 		
 		self.bags = {}
 		
@@ -75,12 +81,23 @@ function Serenity_Bags:OnDocLoaded()
 		Apollo.RegisterEventHandler("QuestObjectiveUpdated", "ResetBagItems", self)
 		Apollo.RegisterEventHandler("PlayerPathRefresh", "ResetBagItems", self)
 		Apollo.RegisterEventHandler("QuestStateChanged", "ResetBagItems", self)
+		
+		Apollo.RegisterEventHandler("DragDropSysBegin", "OnSystemBeginDragDrop", self)
 	end
 end
 
 -----------------------------------------------------------------------------------------------
 -- Serenity_Bags Functions
 -----------------------------------------------------------------------------------------------
+
+function Serenity_Bags:OnSystemBeginDragDrop(wndSource, strType, iData)
+	if strType ~= "DDBagItem" then return end
+	
+	if (Apollo.IsControlKeyDown()) then
+	Print("clk")
+		self:InvokeSalvageConfirmWindow(iData)
+	end
+end
 
 function Serenity_Bags:DestroyBags()
 	for i, v in pairs(self.bags) do
@@ -169,13 +186,31 @@ function Serenity_Bags:ResetMainBag()
 	end
 end
 
+function Serenity_Bags:GetMaxSizes()
+	local mH = 0;
+	local mW = 0;
+
+	for i, v in pairs(self.bags) do
+		local w, h = v:GetSize()
+		if (w > mW) then
+			mW = w
+		end
+		if (h > mH) then
+			mH = h
+		end
+	end
+	
+	return mH, mW
+end
+
 function Serenity_Bags:ArrangeBagContainers()
 	table.sort(self.bags, function(a,b)
-		--return string.lower(a:GetCategory()) > string.lower(b:GetCategory())
-		if a.yH == b.yH then
-			return a.xH > b.xH
+		if (a:GetCategory() == "Quest") then
+			return true
+		elseif (b:GetCategory() == "Quest") then
+			return false
 		else
-			return a.yH > b.yH
+			return string.lower(a:GetCategory()) > string.lower(b:GetCategory())	
 		end
 	end)
 	
@@ -184,23 +219,45 @@ function Serenity_Bags:ArrangeBagContainers()
 	local x = r
 	local y = t
 	
-	local mH = 0
+	local h, w = self:GetMaxSizes()
 	
 	for i, v in pairs(self.bags) do
-		local w, h = v:GetSize()
-		if (h > mH) then mH = h end
-		
 		v:SetPosition({1, 1, 1, 1}, {x-w, y-h, x, y})
 		
-		x = x-w
+		x = x - w
 		
-		if (x < (l-w/2)) then
+		if (x < (l)) then
 			x = r
-			y = y - mH
-			mH = 0
+			y = y - h
 		end
 	end
 end
+
+function Serenity_Bags:InvokeDeleteConfirmWindow(iData) 
+	local itemData = Item.GetItemFromInventoryLoc(iData)
+	if itemData and not itemData:CanDelete() then
+		return
+	end
+	self.deleteWindow:SetData(iData)
+	self.deleteWindow:Show(true)
+	self.deleteWindow:ToFront()
+	self.deleteWindow:FindChild("DeleteBtn"):SetActionData(GameLib.CodeEnumConfirmButtonType.DeleteItem, iData)
+	Sound.Play(Sound.PlayUI55ErrorVirtual)
+end
+
+function Serenity_Bags:InvokeSalvageConfirmWindow(iData) 
+	local itemData = Item.GetItemFromInventoryLoc(iData)
+	if itemData and not itemData:CanSalvage() then
+		return
+	end
+	Print("Sal")
+	self.salvageWindow:SetData(iData)
+	self.salvageWindow:Show(true)
+	self.salvageWindow:ToFront()
+	self.salvageWindow:FindChild("DeleteBtn"):SetActionData(GameLib.CodeEnumConfirmButtonType.SalvageItem, iData)
+	Sound.Play(Sound.PlayUI55ErrorVirtual)
+end
+
 ---------------------------------------------------------------------------------------------------
 -- Tooltip Functions
 ---------------------------------------------------------------------------------------------------
@@ -270,7 +327,7 @@ end
 
 function Serenity_BagContainer:SetQuestItems(items)
 	table.sort(items, function(a, b) 
-		return string.lower(a.itemInBag:GetName()) < string.lower(b.itemInBag:GetName())
+		return string.lower(a.strName) < string.lower(b.strName)
 	end)
 	
 	self.items = items
@@ -306,6 +363,8 @@ function Serenity_BagContainer:SetItems(items)
 		local y = v.nBagSlot * 51
 		
 		itm:FindChild("BItm"):SetAnchorOffsets(0, -y, 0, 0)
+		
+		_G["itm"] = v
 	end
 	
 	self:SizeToFit()
@@ -356,6 +415,42 @@ function Serenity_Bags:ToggleTradeSkillBag( wndHandler, wndControl, eMouseButton
 	local tAnchors = {}
 	tAnchors.nLeft, tAnchors.nTop, tAnchors.nRight, tAnchors.nBottom = self.mainBag:GetAnchorOffsets()
 	Event_FireGenericEvent("ToggleTradeskillInventoryFromBag", tAnchors)
+end
+
+---------------------------------------------------------------------------------------------------
+-- BagItem Functions
+---------------------------------------------------------------------------------------------------
+
+function Serenity_BagContainer:OnDragCancel( wndHandler, wndControl, strType, iData, eReason, bDragDropHasBeenReset )
+	if strType ~= "DDBagItem" or eReason == Apollo.DragDropCancelReason.EscapeKey or eReason == Apollo.DragDropCancelReason.ClickedOnNothing then
+		return false
+	end
+
+	if eReason == Apollo.DragDropCancelReason.ClickedOnWorld or eReason == Apollo.DragDropCancelReason.DroppedOnNothing then
+		self.par:InvokeDeleteConfirmWindow(iData)
+	end
+	return false
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- InventoryDeleteNotice Functions
+---------------------------------------------------------------------------------------------------
+
+function Serenity_Bags:OnDeleteCancel( wndHandler, wndControl )
+	self.deleteWindow:SetData(nil)
+	self.deleteWindow:Close()
+	self:ResetBagItems()
+end
+
+---------------------------------------------------------------------------------------------------
+-- InventorySalvageNotice Functions
+---------------------------------------------------------------------------------------------------
+
+function Serenity_Bags:OnSalvageCancel( wndHandler, wndControl )
+	self.salvageWindow:SetData(nil)
+	self.salvageWindow:Close()
+	self:ResetBagItems()
 end
 
 -----------------------------------------------------------------------------------------------
