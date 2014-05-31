@@ -10,7 +10,7 @@ require "Window"
 -----------------------------------------------------------------------------------------------
 local Serenity_Bags = {} 
 local Serenity_BagContainer = {
-	itemsPerRow = 4,
+	itemsPerRow = 5,
 }
 -----------------------------------------------------------------------------------------------
 -- Constants
@@ -171,7 +171,12 @@ end
 
 function Serenity_Bags:ArrangeBagContainers()
 	table.sort(self.bags, function(a,b)
-		return string.lower(a:GetCategory()) > string.lower(b:GetCategory())
+		--return string.lower(a:GetCategory()) > string.lower(b:GetCategory())
+		if a.yH == b.yH then
+			return a.xH > b.xH
+		else
+			return a.yH > b.yH
+		end
 	end)
 	
 	local l, t, r, b = self.mainBag:GetAnchorOffsets()
@@ -317,8 +322,10 @@ function Serenity_BagContainer:SizeToFit()
 		if (xItems > number) then
 			xItems = number
 		else
-			yItems = math.floor(number / xItems)
+			yItems = math.ceil(number / xItems)
 		end
+		self.xH = xItems
+		self.yH = yItems
 		
 		local w = 10 + 50 * xItems + xItems * 2
 		local h = 30 + 50 * yItems + yItems * 2
