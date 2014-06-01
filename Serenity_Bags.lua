@@ -81,6 +81,9 @@ function Serenity_Bags:OnDocLoaded()
 		Apollo.RegisterEventHandler("QuestObjectiveUpdated", "ResetBagItems", self)
 		Apollo.RegisterEventHandler("PlayerPathRefresh", "ResetBagItems", self)
 		Apollo.RegisterEventHandler("QuestStateChanged", "ResetBagItems", self)
+		Apollo.RegisterEventHandler("UpdateInventory", "ResetBagItems", self)
+		
+		Apollo.RegisterEventHandler("VendorItemsUpdated", "OnVendorWindowInvoke", self)
 		
 		Apollo.RegisterEventHandler("DragDropSysBegin", "OnSystemBeginDragDrop", self)
 	end
@@ -94,7 +97,6 @@ function Serenity_Bags:OnSystemBeginDragDrop(wndSource, strType, iData)
 	if strType ~= "DDBagItem" then return end
 	
 	if (Apollo.IsControlKeyDown()) then
-	Print("clk")
 		self:InvokeSalvageConfirmWindow(iData)
 	end
 end
@@ -256,6 +258,18 @@ function Serenity_Bags:InvokeSalvageConfirmWindow(iData)
 	self.salvageWindow:ToFront()
 	self.salvageWindow:FindChild("SalvageBtn"):SetActionData(GameLib.CodeEnumConfirmButtonType.SalvageItem, iData)
 	Sound.Play(Sound.PlayUI55ErrorVirtual)
+end
+
+function Serenity_Bags:OnVendorWindowInvoke()
+	local items = GameLib.GetPlayerUnit():GetInventoryItems()
+	
+	for i,v in pairs(items) do
+		--Print(v.itemInBag:GetItemCategoryName())
+		--_G["itm"] = v
+		if (v.itemInBag:GetItemCategoryName() == "Junk") then
+			SellItemToVendor(v.nBagSlot, v.itemInBag:GetStackCount())
+		end
+	end
 end
 
 ---------------------------------------------------------------------------------------------------
