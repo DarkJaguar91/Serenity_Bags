@@ -413,6 +413,12 @@ function Serenity_BagContainer:SizeToFit()
 end
 
 function Serenity_BagContainer:Destroy()
+	local bg = self.frame:FindChild("ItemFrame"):GetChildren()[1]
+	if (bg:GetName() == "BagItem") then
+		bg:FindChild("BItm"):MarkAllItemsAsSeen()
+	end
+	
+	--self.frame:FindChild("ItemFrame"):GetChildren()[1]:FindChild("BItm"):MarkAllItemsAsSeen()
 	self.frame:Destroy()
 	self.frame = nil
 end
