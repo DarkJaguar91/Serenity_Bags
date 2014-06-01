@@ -8,6 +8,7 @@ Details:
 Serenity_Bags replaces the Wildstar inventory with an inventory that automatically sorts items in your inventory for you and seperates them into seperate basg with headings for a neater and more understandable layout.
 
 ChangeLog:
+====
 =>Sorts items correctly to their Family Name
 =>Shows currency and Bags bar
 =>Button to open Tradeskill
