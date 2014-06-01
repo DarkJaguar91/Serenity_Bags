@@ -182,6 +182,22 @@ end
 function Serenity_Bags:ResetMainBag()
 	self.mainBag:FindChild("Currency"):SetAmount(GameLib.GetPlayerCurrency())
 	
+	
+	
+	local emptyBagFrame = self.mainBag:FindChild("EmptyBag")
+	if (emptyBagFrame:GetTotalEmptyBagSlots() > 0) then
+		local totalBagSlots = emptyBagFrame:GetTotalBagSlots()
+		local y = 34 * (totalBagSlots-1)
+		
+		emptyBagFrame:SetAnchorPoints(0,0,1,1)
+		emptyBagFrame:SetAnchorOffsets(10, -y,-10,-10)
+		emptyBagFrame:Show(true)
+	else
+		emptyBagFrame:Show(false)
+	end
+	self.mainBag:FindChild("NumberSlotsEmpty"):SetText(tostring(emptyBagFrame:GetTotalEmptyBagSlots()))
+	
+	
 	for i = 1, 4 do
 		local bagItm = self.mainBag:FindChild("Bag" .. i)
 		bagItm:FindChild("Number"):SetText(tostring(bagItm:GetItem():GetBagSlots()))
