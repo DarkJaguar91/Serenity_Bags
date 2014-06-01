@@ -15,15 +15,6 @@ local Serenity_BagContainer = {
 -----------------------------------------------------------------------------------------------
 -- Constants
 -----------------------------------------------------------------------------------------------
-local ItemQualityToColor = {
-	"ff333333",
-	"ffffffff",
-	"ff00ff00",
-	"ff0000ff",
-	"ffff00ff",
-	"ffffff00",
-	"ffff8888",
-}
 
 -----------------------------------------------------------------------------------------------
 -- Initialization
@@ -64,32 +55,48 @@ function Serenity_Bags:OnDocLoaded()
 	if self.xmlDoc ~= nil and self.xmlDoc:IsLoaded() then
 		
 	    self.mainBag = Apollo.LoadForm(self.xmlDoc, "MainBagForm", nil, self)
-	    self.mainBag:Show(false, true)		
+	    self.mainBag:Show(false, true)
+	
+		self.deleteWindow = Apollo.LoadForm(self.xmlDoc, "InventoryDeleteNotice", nil, self)
+		self.deleteWindow:Show(false, true)
+		
+		self.salvageWindow = Apollo.LoadForm(self.xmlDoc, "InventorySalvageNotice", nil, self)
+		self.salvageWindow :Show(false, true)
 		
 		self.bags = {}
 		
 		Apollo.RegisterSlashCommand("bag", "ShowBags", self)
-		Apollo.RegisterEventHandler("InvokeVendorWindow", "VendorWindowOpen", self)
-		Apollo.RegisterEventHandler("CloseVendorWindow", "VendorWindowClosed", self)
-		Apollo.RegisterEventHandler("PersonaUpdateCharacterStats",	"ResetBags", self)
+
+		Apollo.RegisterEventHandler("ToggleInventory",	"ToggleBags", self)
 		Apollo.RegisterEventHandler("InterfaceMenu_ToggleInventory", "ToggleBags", self)
 		Apollo.RegisterEventHandler("GuildBank_ShowPersonalInventory",	"ShowBags", self)
-		Apollo.RegisterEventHandler("ToggleInventory",	"ToggleBags", self)
 		Apollo.RegisterEventHandler("ShowInventory",	"ShowBags", self)
-		Apollo.RegisterEventHandler("PlayerCurrencyChanged",	"ResetBags", self)
-		Apollo.RegisterEventHandler("LootedItem",	"ResetBags", self)
+		
+		Apollo.RegisterEventHandler("PersonaUpdateCharacterStats", "ResetAllBags", self)
+		Apollo.RegisterEventHandler("PlayerCurrencyChanged",	"ResetAllBags", self)
+
+		Apollo.RegisterEventHandler("LootedItem",	"ResetBagItems", self)
+		Apollo.RegisterEventHandler("ChallengeUpdated", "ResetBagItems", self)
+		Apollo.RegisterEventHandler("PlayerPathMissionUpdate", "ResetBagItems", self)
+		Apollo.RegisterEventHandler("QuestObjectiveUpdated", "ResetBagItems", self)
+		Apollo.RegisterEventHandler("PlayerPathRefresh", "ResetBagItems", self)
+		Apollo.RegisterEventHandler("QuestStateChanged", "ResetBagItems", self)
+		
+		Apollo.RegisterEventHandler("DragDropSysBegin", "OnSystemBeginDragDrop", self)
 	end
 end
 
 -----------------------------------------------------------------------------------------------
 -- Serenity_Bags Functions
 -----------------------------------------------------------------------------------------------
-function Serenity_Bags:VendorWindowOpen()
-	self.vendorOpen = true
-end
 
-function Serenity_Bags:VendorWindowClosed()
-	self.vendorOpen = false
+function Serenity_Bags:OnSystemBeginDragDrop(wndSource, strType, iData)
+	if strType ~= "DDBagItem" then return end
+	
+	if (Apollo.IsControlKeyDown()) then
+	Print("clk")
+		self:InvokeSalvageConfirmWindow(iData)
+	end
 end
 
 function Serenity_Bags:DestroyBags()
@@ -120,9 +127,8 @@ function Serenity_Bags:CollectBagItems()
 end
 
 function Serenity_Bags:ToggleBags()
-	self:DestroyBags()
-	
 	if self.mainBag:IsVisible() then
+		self:DestroyBags()
 		self.mainBag:Close()
 	else
 		self:ShowBags()
@@ -134,18 +140,17 @@ function Serenity_Bags:ShowBags()
 	
 	self.mainBag:Show(true)
 	
-	-- reset mainBagData
-	self:ResetMainBag()	
-	
-	-- create bags
-	self:ResetBags()
+	self:ResetAllBags()
 end
 
-function Serenity_Bags:ResetBags()
-	self:DestroyBags()
-	
+function Serenity_Bags:ResetAllBags()
 	self:ResetMainBag()
-	
+	self:ResetBagItems()
+end
+
+function Serenity_Bags:ResetBagItems()
+	self:DestroyBags()
+		
 	if self.mainBag:IsVisible() then
 		local categories = self:CollectBagItems()
 		
@@ -157,6 +162,17 @@ function Serenity_Bags:ResetBags()
 			table.insert(self.bags, bag)
 		end
 		
+		_G["qst"] = Item.GetVirtualItems()
+		local questItems = Item.GetVirtualItems()
+		if (#questItems > 0) then
+			local bag = Serenity_BagContainer:new()
+			
+			bag:Init(self, {"Quest", questItems})
+			
+			table.insert(self.bags, bag)
+		end
+		
+				
 		self:ArrangeBagContainers()
 	end
 end
@@ -170,59 +186,90 @@ function Serenity_Bags:ResetMainBag()
 	end
 end
 
-function Serenity_Bags:ArrangeBagContainers()
-	table.sort(self.bags, function(a,b)
-		return string.lower(a:GetCategory()) > string.lower(b:GetCategory())
-	end)
-	
-	local x = -5
-	local y = -55
-	
-	local mH = 0
-	
+function Serenity_Bags:GetMaxSizes()
+	local mH = 0;
+	local mW = 0;
+
 	for i, v in pairs(self.bags) do
 		local w, h = v:GetSize()
-		if (h > mH) then mH = h end
-		
+		if (w > mW) then
+			mW = w
+		end
+		if (h > mH) then
+			mH = h
+		end
+	end
+	
+	return mH, mW
+end
+
+function Serenity_Bags:ArrangeBagContainers()
+	table.sort(self.bags, function(a,b)
+		if (a:GetCategory() == "Quest") then
+			return true
+		elseif (b:GetCategory() == "Quest") then
+			return false
+		else
+			return string.lower(a:GetCategory()) > string.lower(b:GetCategory())	
+		end
+	end)
+	
+	local l, t, r, b = self.mainBag:GetAnchorOffsets()
+	
+	local x = r
+	local y = t
+	
+	local h, w = self:GetMaxSizes()
+	
+	for i, v in pairs(self.bags) do
 		v:SetPosition({1, 1, 1, 1}, {x-w, y-h, x, y})
 		
-		x = x-w
+		x = x - w
 		
-		if (x < -500) then
-			x = -5
-			y = y - mH
-			mH = 0
+		if (x < (l)) then
+			x = r
+			y = y - h
 		end
 	end
 end
+
+function Serenity_Bags:InvokeDeleteConfirmWindow(iData) 
+	local itemData = Item.GetItemFromInventoryLoc(iData)
+	if itemData and not itemData:CanDelete() then
+		return
+	end
+	self.deleteWindow:SetData(iData)
+	self.deleteWindow:Show(true)
+	self.deleteWindow:ToFront()
+	self.deleteWindow:FindChild("DeleteBtn"):SetActionData(GameLib.CodeEnumConfirmButtonType.DeleteItem, iData)
+	Sound.Play(Sound.PlayUI55ErrorVirtual)
+end
+
+function Serenity_Bags:InvokeSalvageConfirmWindow(iData) 
+	local itemData = Item.GetItemFromInventoryLoc(iData)
+	if itemData and not itemData:CanSalvage() then
+		return
+	end
+
+	self.salvageWindow:SetData(iData)
+	self.salvageWindow:Show(true)
+	self.salvageWindow:ToFront()
+	self.salvageWindow:FindChild("SalvageBtn"):SetActionData(GameLib.CodeEnumConfirmButtonType.SalvageItem, iData)
+	Sound.Play(Sound.PlayUI55ErrorVirtual)
+end
+
 ---------------------------------------------------------------------------------------------------
 -- Tooltip Functions
 ---------------------------------------------------------------------------------------------------
 
-function Serenity_BagContainer:ItemHover( wndHandler, wndControl, eToolTipType, x, y )
-	if (wndHandler ~= wndControl) then return end
-
-	local itm = wndHandler:GetData()
-	if not itm then
-		itm = wndControl:GetData()
-	end
-	
+function Serenity_BagContainer:ItemHover( wndControl, wndHandler, tType, item)
+	if wndControl ~= wndHandler then return end
 	wndControl:SetTooltipDoc(nil)
-	Tooltip.GetItemTooltipForm(self, wndControl, itm.itemInBag, {bPrimary = true, bSelling = false})
-end
-
-function Serenity_BagContainer:OnItemMouseButtonUp( wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY )
-	if (wndControl ~= wndHandler) then return end
-	
-	if (self.par.vendorOpen) then
-		if (eMouseButton == GameLib.CodeEnumInputMouse.Right) then
-			local item = wndControl:GetData()
-		
-			SellItemToVendor(item.nBagSlot, 1)
-		end
+	if item ~= nil then
+		local itemEquipped = item:GetEquippedItemForItemType()
+		Tooltip.GetItemTooltipForm(self, wndControl, item, {bPrimary = true, bSelling = false, itemCompare = itemEquipped})
 	end
 end
-
 
 function Serenity_Bags:BagItemHover( wndHandler, wndControl, eToolTipType, x, y )
 	if (wndHandler ~= wndControl) then return end
@@ -257,7 +304,11 @@ function Serenity_BagContainer:Init(parent, params)
 	end
 	
 	if (params[2]) then
-		self:SetItems(params[2])
+		if (params[1] == "Quest") then
+			self:SetQuestItems(params[2])
+		else 
+			self:SetItems(params[2])
+		end
 	end
 end
 
@@ -274,6 +325,31 @@ function Serenity_BagContainer:SetPosition(anchors, offsets)
 	self.frame:SetAnchorOffsets(unpack(offsets))
 end
 
+function Serenity_BagContainer:SetQuestItems(items)
+	table.sort(items, function(a, b) 
+		return string.lower(a.strName) < string.lower(b.strName)
+	end)
+	
+	self.items = items
+	
+	for i,v in pairs(items) do
+		local itm = Apollo.LoadForm(self.par.xmlDoc, "QuestItem", self.frame:FindChild("ItemFrame"), self)
+		
+		itm:FindChild("Sprite"):SetSprite(v.strIcon)
+		itm:FindChild("Count"):SetText(v.nCount)
+		itm:SetTooltip(string.format("<P Font=\"CRB_InterfaceSmall\">%s</P><P Font=\"CRB_InterfaceSmall\" TextColor=\"aaaaaaaa\">%s</P>", v.strName, v.strFlavor))
+
+		if (v.nCount > 1) then
+			itm:FindChild("Count"):Show(true)
+		else
+			itm:FindChild("Count"):Show(false)
+		end
+	end
+	
+	self:SizeToFit()
+	self.frame:FindChild("ItemFrame"):ArrangeChildrenTiles()
+end
+
 function Serenity_BagContainer:SetItems(items)
 	table.sort(items, function(a, b) 
 		return string.lower(a.itemInBag:GetName()) < string.lower(b.itemInBag:GetName())
@@ -281,22 +357,14 @@ function Serenity_BagContainer:SetItems(items)
 
 	self.items = items
 	
+	local onceFlag = true
+	
 	for i, v in pairs(items) do
 		local itm = Apollo.LoadForm(self.par.xmlDoc, "BagItem", self.frame:FindChild("ItemFrame"), self)
 		
-		itm:FindChild("Sprite"):SetSprite(v.itemInBag:GetIcon()) 
+		local y = v.nBagSlot * 51
 		
-		itm:SetBGColor(ItemQualityToColor[v.itemInBag:GetItemQuality()])
-		
-		if v.itemInBag:GetStackCount() > 1 then
-			itm:FindChild("Number"):SetText(tostring(v.itemInBag:GetStackCount()))
-			itm:FindChild("Number"):Show(true)
-		else
-			itm:FindChild("Number"):Show(false)		
-		end
-		
-		itm:SetData(v)
-		_G["itm"] = itm
+		itm:FindChild("BItm"):SetAnchorOffsets(0, -y, 0, 0)
 	end
 	
 	self:SizeToFit()
@@ -313,8 +381,10 @@ function Serenity_BagContainer:SizeToFit()
 		if (xItems > number) then
 			xItems = number
 		else
-			yItems = math.floor(number / xItems)
+			yItems = math.ceil(number / xItems)
 		end
+		self.xH = xItems
+		self.yH = yItems
 		
 		local w = 10 + 50 * xItems + xItems * 2
 		local h = 30 + 50 * yItems + yItems * 2
@@ -331,6 +401,56 @@ end
 function Serenity_BagContainer:Destroy()
 	self.frame:Destroy()
 	self.frame = nil
+end
+
+---------------------------------------------------------------------------------------------------
+-- MainBagForm Functions
+---------------------------------------------------------------------------------------------------
+
+function Serenity_Bags:MoveFrames( wndHandler, wndControl, x, y, wndSource, strType, iData, bDragDropHasBeenReset )
+	self:ArrangeBagContainers()
+end
+
+function Serenity_Bags:ToggleTradeSkillBag( wndHandler, wndControl, eMouseButton )
+	local tAnchors = {}
+	tAnchors.nLeft, tAnchors.nTop, tAnchors.nRight, tAnchors.nBottom = self.mainBag:GetAnchorOffsets()
+	Event_FireGenericEvent("ToggleTradeskillInventoryFromBag", tAnchors)
+end
+
+---------------------------------------------------------------------------------------------------
+-- BagItem Functions
+---------------------------------------------------------------------------------------------------
+
+function Serenity_BagContainer:OnDragCancel( wndHandler, wndControl, strType, iData, eReason, bDragDropHasBeenReset )
+	if strType ~= "DDBagItem" or eReason == Apollo.DragDropCancelReason.EscapeKey or eReason == Apollo.DragDropCancelReason.ClickedOnNothing then
+		return false
+	end
+
+	if eReason == Apollo.DragDropCancelReason.ClickedOnWorld or eReason == Apollo.DragDropCancelReason.DroppedOnNothing then
+		self.par:InvokeDeleteConfirmWindow(iData)
+	end
+	return false
+
+end
+
+---------------------------------------------------------------------------------------------------
+-- InventoryDeleteNotice Functions
+---------------------------------------------------------------------------------------------------
+
+function Serenity_Bags:OnDeleteCancel( wndHandler, wndControl )
+	self.deleteWindow:SetData(nil)
+	self.deleteWindow:Close()
+	self:ResetBagItems()
+end
+
+---------------------------------------------------------------------------------------------------
+-- InventorySalvageNotice Functions
+---------------------------------------------------------------------------------------------------
+
+function Serenity_Bags:OnSalvageCancel( wndHandler, wndControl )
+	self.salvageWindow:SetData(nil)
+	self.salvageWindow:Close()
+	self:ResetBagItems()
 end
 
 -----------------------------------------------------------------------------------------------
