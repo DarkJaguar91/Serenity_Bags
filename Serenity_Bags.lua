@@ -204,8 +204,7 @@ function Serenity_Bags:ResetMainBag()
 	end
 end
 
-function Serenity_Bags:GetMaxSizes()
-	local mH = 0;
+function Serenity_Bags:GetMaxWidth()
 	local mW = 0;
 
 	for i, v in pairs(self.bags) do
@@ -213,12 +212,9 @@ function Serenity_Bags:GetMaxSizes()
 		if (w > mW) then
 			mW = w
 		end
-		if (h > mH) then
-			mH = h
-		end
 	end
 	
-	return mH, mW
+	return mW
 end
 
 function Serenity_Bags:ArrangeBagContainers()
@@ -232,22 +228,42 @@ function Serenity_Bags:ArrangeBagContainers()
 		end
 	end)
 	
+	local catagories = {}
+	for i, v in pairs(self.bags) do
+		table.insert(catagories, i)
+	end
+		
 	local l, t, r, b = self.mainBag:GetAnchorOffsets()
 	
 	local x = r
 	local y = t
 	
-	local h, w = self:GetMaxSizes()
+	local w = self:GetMaxWidth() 
 	
+	local cnt = 1;
 	for i, v in pairs(self.bags) do
+		local h = v:GetHeight()
+		if cnt % 2 == 0 then
+			local tH = self.bags[catagories[cnt-1]]:GetHeight()
+			
+			if (tH > h) then h = tH end
+		else
+			if (catagories[cnt+1]) then
+				local tH = self.bags[catagories[cnt+1]]:GetHeight()
+			
+				if (tH > h) then h = tH end
+			end
+		end
+	
 		v:SetPosition({1, 1, 1, 1}, {x-w, y-h, x, y})
 		
 		x = x - w
 		
-		if (x < (l)) then
+		if (cnt % 2 == 0) then
 			x = r
 			y = y - h
 		end
+		cnt = cnt + 1
 	end
 end
 
@@ -348,6 +364,15 @@ end
 
 function Serenity_BagContainer:GetSize()
 	return self.frame:GetWidth(), self.frame:GetHeight() 
+end
+
+
+function Serenity_BagContainer:GetWidth()
+	return self.frame:GetWidth()
+end
+
+function Serenity_BagContainer:GetHeight()
+	return self.frame:GetHeight()
 end
 
 function Serenity_BagContainer:SetPosition(anchors, offsets)
