@@ -250,11 +250,11 @@ function Serenity_Bags:InvokeSalvageConfirmWindow(iData)
 	if itemData and not itemData:CanSalvage() then
 		return
 	end
-	Print("Sal")
+
 	self.salvageWindow:SetData(iData)
 	self.salvageWindow:Show(true)
 	self.salvageWindow:ToFront()
-	self.salvageWindow:FindChild("DeleteBtn"):SetActionData(GameLib.CodeEnumConfirmButtonType.SalvageItem, iData)
+	self.salvageWindow:FindChild("SalvageBtn"):SetActionData(GameLib.CodeEnumConfirmButtonType.SalvageItem, iData)
 	Sound.Play(Sound.PlayUI55ErrorVirtual)
 end
 
@@ -357,14 +357,14 @@ function Serenity_BagContainer:SetItems(items)
 
 	self.items = items
 	
+	local onceFlag = true
+	
 	for i, v in pairs(items) do
 		local itm = Apollo.LoadForm(self.par.xmlDoc, "BagItem", self.frame:FindChild("ItemFrame"), self)
 		
 		local y = v.nBagSlot * 51
 		
 		itm:FindChild("BItm"):SetAnchorOffsets(0, -y, 0, 0)
-		
-		_G["itm"] = v
 	end
 	
 	self:SizeToFit()
