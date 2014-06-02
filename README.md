@@ -1,4 +1,4 @@
-#Test
+#Serenity_Bags
 ##Wildstar bag replacement addon:
 
 ###Details:
