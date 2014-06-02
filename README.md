@@ -2,8 +2,8 @@
 ##Wildstar bag replacement addon:
 
 ###Details:
-Serenity_Bags is an addon to replace the standard bag addon.
-It organises the items in your bag into seperated bag windows according to the Family Name given to the item by the wildstar developers.
+Serenity_Bags is an addon to replace the standard bag addon.<br />
+It organises the items in your bag into seperated bag windows according to the Family Name given to the item by the wildstar developers.<br />
 It also shows the bag in a new more understandable way with no hidden windows etc.
 
 ###ChangeLog:
