@@ -15,7 +15,7 @@ local Serenity_BagContainer = {
 -----------------------------------------------------------------------------------------------
 -- Constants
 -----------------------------------------------------------------------------------------------
-
+local SavedItemCategories = {}
 -----------------------------------------------------------------------------------------------
 -- Initialization
 -----------------------------------------------------------------------------------------------
@@ -38,6 +38,25 @@ function Serenity_Bags:Init()
     Apollo.RegisterAddon(self, bHasConfigureFunction, strConfigureButtonText, tDependencies)
 end
  
+function Serenity_Bags:OnSave(eType)
+	if eType == GameLib.CodeEnumAddonSaveLevel.Character then
+		return {
+			savedBagNames = SavedItemCategories,
+		}
+	end
+	
+	return nil
+end
+
+function Serenity_Bags:OnRestore(eType, tSavedData)
+	if eType == GameLib.CodeEnumAddonSaveLevel.Character  then
+		if not tSavedData then
+			return
+		end
+		
+		SavedItemCategories = tSavedData.savedBagNames
+	end	
+end
 
 -----------------------------------------------------------------------------------------------
 -- Serenity_Bags OnLoad
@@ -61,7 +80,10 @@ function Serenity_Bags:OnDocLoaded()
 		self.deleteWindow:Show(false, true)
 		
 		self.salvageWindow = Apollo.LoadForm(self.xmlDoc, "InventorySalvageNotice", nil, self)
-		self.salvageWindow :Show(false, true)
+		self.salvageWindow:Show(false, true)
+		
+		self.BagNamingWindow = Apollo.LoadForm(self.xmlDoc, "BagNamer", nil, self)
+		self.BagNamingWindow:Show(false, true)
 		
 		self.bags = {}
 		
@@ -86,6 +108,8 @@ function Serenity_Bags:OnDocLoaded()
 		Apollo.RegisterEventHandler("VendorItemsUpdated", "OnVendorWindowInvoke", self)
 		
 		Apollo.RegisterEventHandler("DragDropSysBegin", "OnSystemBeginDragDrop", self)
+		
+		Apollo.RegisterEventHandler("ItemRemoved", 					"OnItemRemoved", self)
 	end
 end
 
@@ -97,7 +121,7 @@ function Serenity_Bags:OnSystemBeginDragDrop(wndSource, strType, iData)
 	if strType ~= "DDBagItem" then return end
 	
 	if (Apollo.IsControlKeyDown()) then
-		self:InvokeSalvageConfirmWindow(iData)
+		--lf:InvokeSalvageConfirmWindow(iData)
 	end
 end
 
@@ -110,22 +134,34 @@ function Serenity_Bags:DestroyBags()
 	self.bags = {}
 end
 
+function Serenity_Bags:OnItemRemoved(itemSold, nCount, eReason)
+	SavedItemCategories[itemSold:GetItemId()] = nil
+end
+
 function Serenity_Bags:CollectBagItems()
-	local items = GameLib.GetPlayerUnit():GetInventoryItems()
+	if (GameLib.GetPlayerUnit()) then
+		local items = GameLib.GetPlayerUnit():GetInventoryItems()
 	
-	local categories = {}
-	
-	for i, v in pairs(items) do
-		local category = v.itemInBag:GetItemFamilyName()
+		local categories = {}
 		
-		if categories[category] == nil then
-			categories[category] = {}
+		for i, v in pairs(items) do
+			local category = nil
+			if (SavedItemCategories[v.itemInBag:GetItemId()]) then
+				category = SavedItemCategories[v.itemInBag:GetItemId()]
+			else
+				category = v.itemInBag:GetItemFamilyName()
+			end
+			
+			if categories[category] == nil then
+				categories[category] = {}
+			end
+			
+			table.insert(categories[category], v)
 		end
-		
-		table.insert(categories[category], v)
+			
+		return categories
 	end
-		
-	return categories
+	return nil
 end
 
 function Serenity_Bags:ToggleBags()
@@ -151,10 +187,13 @@ function Serenity_Bags:ResetAllBags()
 end
 
 function Serenity_Bags:ResetBagItems()
+	if (GameLib.GetPlayerUnit() == nil) then return end
 	self:DestroyBags()
 		
 	if self.mainBag:IsVisible() then
 		local categories = self:CollectBagItems()
+		
+		if (categories == nil) then return end
 		
 		for i, v in pairs(categories) do
 			local bag = Serenity_BagContainer:new()
@@ -292,6 +331,67 @@ function Serenity_Bags:InvokeSalvageConfirmWindow(iData)
 	Sound.Play(Sound.PlayUI55ErrorVirtual)
 end
 
+function Serenity_Bags:GetSavedBagNames()
+	local names = {}
+	
+	for i, v in pairs(SavedItemCategories) do
+		if not self:tableContains(names, v) then
+			table.insert(names, v)
+		end
+	end
+	
+	Print(#names)
+	
+	return names
+end
+
+function Serenity_Bags:tableContains(table, data)
+	for i, v in pairs(table) do
+		if (v == data) then
+			return true
+		end
+	end
+	return false
+end
+
+function Serenity_Bags:InvokeBagNamingWindow(item) 
+	if item == nil then
+		return
+	end
+	
+	self.BagNamingWindow:SetData(item)
+	self.BagNamingWindow:Show(true)
+	self.BagNamingWindow:ToFront()
+	if (SavedItemCategories[item]) then
+		self.BagNamingWindow:FindChild("RemoveBtn"):Show(true)
+	else
+		self.BagNamingWindow:FindChild("RemoveBtn"):Show(false)
+	end
+	
+	local bagNames = self:GetSavedBagNames()
+	Print(#bagNames)
+	if (#bagNames > 0) then
+		local wnd = self.BagNamingWindow:FindChild("NamesAvailable")
+		wnd:Show(true)
+		local list = wnd:FindChild("ListOfNames")
+		
+		list:DestroyChildren()
+		
+		for i, v in pairs(bagNames) do
+			local bagNameWnd = Apollo.LoadForm(self.xmlDoc, "BagName", list, self)
+			bagNameWnd:FindChild("NameBtn"):SetText(v)
+		end
+		list:ArrangeChildrenVert()
+	else
+		self.BagNamingWindow:FindChild("NamesAvailable"):Show(false)	
+	end
+	
+	self.BagNamingWindow:FindChild("EditBox"):SetText("")
+	Sound.Play(Sound.PlayUI55ErrorVirtual)
+	self.BagNamingWindow:FindChild("EditBox"):SetFocus()
+end
+
+
 function Serenity_Bags:OnVendorWindowInvoke()
 	local items = GameLib.GetPlayerUnit():GetInventoryItems()
 	
@@ -420,6 +520,7 @@ function Serenity_BagContainer:SetItems(items)
 		local y = v.nBagSlot  * 51
 		
 		itm:FindChild("BItm"):SetAnchorOffsets(0, -y, 0, 0)
+		itm:FindChild("BItm"):SetData(v)
 	end
 	
 	self:SizeToFit()
@@ -491,7 +592,23 @@ function Serenity_BagContainer:OnDragCancel( wndHandler, wndControl, strType, iD
 		self.par:InvokeDeleteConfirmWindow(iData)
 	end
 	return false
+end
 
+function Serenity_BagContainer:OnBagClick( wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY )
+	if eMouseButton == GameLib.CodeEnumInputMouse.Middle then
+		if (wndHandler:GetName() == "BItm") then
+			local itm = wndHandler:GetData()
+			
+			if (Apollo.IsControlKeyDown()) then
+				self.par:InvokeSalvageConfirmWindow(itm.itemInBag:GetInventoryId())
+			end
+			if Apollo.IsAltKeyDown() then
+				self.par:InvokeBagNamingWindow(itm.itemInBag:GetItemId())
+							
+				self.par:ResetBagItems()
+			end
+		end
+	end
 end
 
 ---------------------------------------------------------------------------------------------------
@@ -504,7 +621,8 @@ function Serenity_Bags:OnDeleteCancel( wndHandler, wndControl )
 	self:ResetBagItems()
 end
 
----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------
+---------------------------
 -- InventorySalvageNotice Functions
 ---------------------------------------------------------------------------------------------------
 
@@ -512,6 +630,38 @@ function Serenity_Bags:OnSalvageCancel( wndHandler, wndControl )
 	self.salvageWindow:SetData(nil)
 	self.salvageWindow:Close()
 	self:ResetBagItems()
+end
+
+
+---------------------------------------------------------------------------------------------------
+-- BagNamer Functions
+---------------------------------------------------------------------------------------------------
+
+function Serenity_Bags:OnBagNamerCancel( wndHandler, wndControl, eMouseButton )
+	self.BagNamingWindow:SetData(nil)
+	self.BagNamingWindow:Show(false)
+end
+
+function Serenity_Bags:NameBag( wndHandler, wndControl, eMouseButton )
+	local text = self.BagNamingWindow:FindChild("EditBox"):GetText()
+	if (text ~= "") then
+		SavedItemCategories[self.BagNamingWindow:GetData()] = text
+	end
+
+	self:ResetBagItems()
+	self:OnBagNamerCancel()
+end
+
+function Serenity_Bags:OnRemoveName( wndHandler, wndControl, eMouseButton )
+	SavedItemCategories[self.BagNamingWindow:GetData()] = nil
+
+	self:ResetBagItems()
+	self:OnBagNamerCancel()
+
+end
+
+function Serenity_Bags:SetBagNameText( wndHandler, wndControl, eMouseButton )
+	self.BagNamingWindow:FindChild("EditBox"):SetText(wndHandler:GetText())
 end
 
 -----------------------------------------------------------------------------------------------
