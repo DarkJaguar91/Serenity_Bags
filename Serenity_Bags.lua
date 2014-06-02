@@ -187,10 +187,10 @@ function Serenity_Bags:ResetMainBag()
 	local emptyBagFrame = self.mainBag:FindChild("EmptyBag")
 	if (emptyBagFrame:GetTotalEmptyBagSlots() > 0) then
 		local totalBagSlots = emptyBagFrame:GetTotalBagSlots()
-		local y = 34 * (totalBagSlots-1)
+		local y = (totalBagSlots-1) * 35
 		
 		emptyBagFrame:SetAnchorPoints(0,0,1,1)
-		emptyBagFrame:SetAnchorOffsets(10, -y,-10,-10)
+		emptyBagFrame:SetAnchorOffsets(0, -y,0,0)
 		emptyBagFrame:Show(true)
 	else
 		emptyBagFrame:Show(false)
@@ -417,7 +417,7 @@ function Serenity_BagContainer:SetItems(items)
 	for i, v in pairs(items) do
 		local itm = Apollo.LoadForm(self.par.xmlDoc, "BagItem", self.frame:FindChild("ItemFrame"), self)
 		
-		local y = v.nBagSlot * 51
+		local y = v.nBagSlot  * 51
 		
 		itm:FindChild("BItm"):SetAnchorOffsets(0, -y, 0, 0)
 	end
