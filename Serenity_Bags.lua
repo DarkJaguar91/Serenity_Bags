@@ -135,7 +135,9 @@ function Serenity_Bags:DestroyBags()
 end
 
 function Serenity_Bags:OnItemRemoved(itemSold, nCount, eReason)
-	SavedItemCategories[itemSold:GetItemId()] = nil
+	if eReason == Item.CodeEnumItemUpdateReason.Vendor then
+		SavedItemCategories[itemSold:GetItemId()] = nil
+	end
 end
 
 function Serenity_Bags:CollectBagItems()
@@ -221,8 +223,6 @@ end
 function Serenity_Bags:ResetMainBag()
 	self.mainBag:FindChild("Currency"):SetAmount(GameLib.GetPlayerCurrency())
 	
-	
-	
 	local emptyBagFrame = self.mainBag:FindChild("EmptyBag")
 	if (emptyBagFrame:GetTotalEmptyBagSlots() > 0) then
 		local totalBagSlots = emptyBagFrame:GetTotalBagSlots()
@@ -239,7 +239,9 @@ function Serenity_Bags:ResetMainBag()
 	
 	for i = 1, 4 do
 		local bagItm = self.mainBag:FindChild("Bag" .. i)
-		bagItm:FindChild("Number"):SetText(tostring(bagItm:GetItem():GetBagSlots()))
+		if (bagItm) then
+			bagItm:FindChild("Number"):SetText(tostring(bagItm:GetItem():GetBagSlots()))
+		end
 	end
 end
 
