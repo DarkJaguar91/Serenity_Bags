@@ -2,9 +2,13 @@
 ##Wildstar bag replacement addon:
 
 ###Details:
-Serenity_Bags is an addon to replace the standard bag addon.<br />
-It organises the items in your bag into seperated bag windows according to the Family Name given to the item by the wildstar developers.<br />
-It also shows the bag in a new more understandable way with no hidden windows etc.
+Serenity_Bags is an addon to replace the standard bag addon.
+
+####Features:
+* Sorts items into seperate bag windows according to the Family Names appointed to the items by Wildstar Developers
+* Adds shortcut key for salvage item: CTRL + Middle Mouse Button
+* Ability to create your own Family Name for certain items thus allowing you to create a new bag for items you want to keep (Eg. A seperate bag window for Healing Gear)
+  * Shortcut Key: ALT + Middle Mouse Button
 
 ###ChangeLog:
 
