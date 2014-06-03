@@ -10,6 +10,18 @@ Serenity_Bags is an addon to replace the standard bag addon.
 * Ability to create your own Family Name for certain items thus allowing you to create a new bag for items you want to keep (Eg. A seperate bag window for Healing Gear)
   * Shortcut Key: ALT + Middle Mouse Button
 
+###Downloads:
+1. Use the Download Zip button on the left of the screen in the GitHub main page for Serenity_Bags
+2. [Box Download](https://app.box.com/s/04tub2bdsqxsmtpf5jak "Serenity_Bags Addon Zip File")
+
+###Install:
+1. Download the Zip file from one of the links above
+2. Unzip into its own folder (Should be Serenity\_Bags or Serenity\_Bags-master)
+3. Copy that folder to: ```C:\Users\<your user name>\AppData\Roaming\NCSOFT\Wildstar\Addons\```
+  * To get to: ```C:\Users\<Your user name>\AppData\Roaming\``` Type ```%APPDATA%``` into the "Run" program or your file explorers path
+  * Note: The Addons folder in the path may not exist if you have not installed an addon before. Just create a new folder in the ```C:\Users\<your user name>\AppData\Roaming\NCSOFT\Wildstar\``` folder called ```Addons```
+4. Start game or type ```/reloadui``` in chat
+
 ###ChangeLog:
 
 ####As of 02/06/2014:
