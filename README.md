@@ -24,6 +24,10 @@ Serenity_Bags is an addon to replace the standard bag addon.
 
 ###ChangeLog:
 
+####As of 03/06/2014:
+* Added an Item Preview form to addon: I found out that the item preview form is part of the Inventory addon for carbines default UI and thus needed to add one.
+* Fixed an issue were it tries to refresh the inventory without certain objects being loaded into the game yet. (May still be a few more that need be fixed)
+
 ####As of 02/06/2014:
 * Changed the salvage menu system (Salvage an item by pressing: CTRL + Middle Mouse Button)
 * Added a feature that allows you to set items to a Family name you choose: ALT + Middle Mouse Button on an item opens otions to create your own Bag Name for the chosen item. If you already have your own bag names, they will appear in a auto complete window to the right (click a name and it will auto type into the edit box)
