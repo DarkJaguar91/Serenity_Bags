@@ -239,7 +239,7 @@ function Serenity_Bags:ResetMainBag()
 	
 	for i = 1, 4 do
 		local bagItm = self.mainBag:FindChild("Bag" .. i)
-		if (bagItm) then
+		if (bagItm and bagItm:GetItem()) then
 			bagItm:FindChild("Number"):SetText(tostring(bagItm:GetItem():GetBagSlots()))
 		end
 	end
