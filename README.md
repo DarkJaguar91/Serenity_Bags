@@ -13,6 +13,7 @@ Serenity_Bags is an addon to replace the standard bag addon.
 ###Downloads:
 1. Use the Download Zip button on the left of the screen in the GitHub main page for Serenity_Bags
 2. [Box Download](https://app.box.com/s/04tub2bdsqxsmtpf5jak "Serenity_Bags Addon Zip File")
+3. [Copy Download](https://copy.com/Hei9geTWmNFl "Serenity_Bags Addon Zip File")
 
 ###Install:
 1. Download the Zip file from one of the links above
@@ -23,6 +24,10 @@ Serenity_Bags is an addon to replace the standard bag addon.
 4. Start game or type ```/reloadui``` in chat
 
 ###ChangeLog:
+
+####As of 03/06/2014:
+* Added an Item Preview form to addon: I found out that the item preview form is part of the Inventory addon for carbines default UI and thus needed to add one.
+* Fixed an issue were it tries to refresh the inventory without certain objects being loaded into the game yet. (May still be a few more that need be fixed)
 
 ####As of 02/06/2014:
 * Changed the salvage menu system (Salvage an item by pressing: CTRL + Middle Mouse Button)
