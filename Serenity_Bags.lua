@@ -150,7 +150,7 @@ end
 -----------------------------------------------------------------------------------------------
 
 function Serenity_Bags:OnWindowManagementReady()
-	Event_FireGenericEvent("WindowManagementAdd", {wnd = self.mainBag, strName = Apollo.GetString("InterfaceMenu_Inventory")})
+	Event_FireGenericEvent("WindowManagementAdd", {wnd = self.mainBag, strName = "Serenity_Bags"})
 end
 
 
