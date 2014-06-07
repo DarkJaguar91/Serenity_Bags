@@ -5,4 +5,6 @@
     <Form Name="ItemPreview.xml"/>
     <Script Name="ItemPreview.lua"/>
     <ReplaceAddon Name="Inventory"/>
+    <Form Name="ImprovedSalvage.xml"/>
+    <Script Name="ImprovedSalvage.lua"/>
 </Addon>

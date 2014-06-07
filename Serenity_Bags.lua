@@ -12,6 +12,30 @@ local Serenity_Bags = {}
 local Serenity_BagContainer = {
 	itemsPerRow = 5,
 }
+
+local fnSortItemsByName = function(itemLeft, itemRight)
+	if itemLeft == itemRight then
+		return 0
+	end
+	if itemLeft and itemRight == nil then
+		return -1
+	end
+	if itemLeft == nil and itemRight then
+		return 1
+	end
+	
+	local strLeftName = itemLeft:GetName()
+	local strRightName = itemRight:GetName()
+	if strLeftName < strRightName then
+		return -1
+	end
+	if strLeftName > strRightName then
+		return 1
+	end
+	
+	return 0
+end
+
 -----------------------------------------------------------------------------------------------
 -- Constants
 -----------------------------------------------------------------------------------------------
@@ -75,6 +99,12 @@ function Serenity_Bags:OnDocLoaded()
 		
 	    self.mainBag = Apollo.LoadForm(self.xmlDoc, "MainBagForm", nil, self)
 	    self.mainBag:Show(false, true)
+		self.mainBag:FindChild("TextActionPrompt_Trash"):Show(false);
+		self.mainBag:FindChild("TextActionPrompt_Salvage"):Show(false);
+		self.mainBag:FindChild("TextActionPrompt_Spec"):Show(false);
+		self.mainBag:FindChild("EmptyBag"):SetSort(true)
+		self.mainBag:FindChild("EmptyBag"):SetItemSortComparer(fnSortItemsByName)
+
 	
 		self.deleteWindow = Apollo.LoadForm(self.xmlDoc, "InventoryDeleteNotice", nil, self)
 		self.deleteWindow:Show(false, true)
@@ -87,6 +117,7 @@ function Serenity_Bags:OnDocLoaded()
 		
 		self.bags = {}
 		
+		Apollo.RegisterEventHandler("WindowManagementReady", "OnWindowManagementReady", self)
 		Apollo.RegisterSlashCommand("bag", "ShowBags", self)
 
 		Apollo.RegisterEventHandler("ToggleInventory",	"ToggleBags", self)
@@ -108,6 +139,7 @@ function Serenity_Bags:OnDocLoaded()
 		Apollo.RegisterEventHandler("VendorItemsUpdated", "OnVendorWindowInvoke", self)
 		
 		Apollo.RegisterEventHandler("DragDropSysBegin", "OnSystemBeginDragDrop", self)
+		Apollo.RegisterEventHandler("DragDropSysEnd", "OnSystemEndDragDrop", self)		
 		
 		Apollo.RegisterEventHandler("ItemRemoved", 					"OnItemRemoved", self)
 	end
@@ -117,12 +149,28 @@ end
 -- Serenity_Bags Functions
 -----------------------------------------------------------------------------------------------
 
+function Serenity_Bags:OnWindowManagementReady()
+	Event_FireGenericEvent("WindowManagementAdd", {wnd = self.mainBag, strName = Apollo.GetString("InterfaceMenu_Inventory")})
+end
+
+
 function Serenity_Bags:OnSystemBeginDragDrop(wndSource, strType, iData)
 	if strType ~= "DDBagItem" then return end
 	
-	if (Apollo.IsControlKeyDown()) then
-		--lf:InvokeSalvageConfirmWindow(iData)
+	self.mainBag:FindChild("DeleteIcon"):SetSprite("CRB_Inventory:InvBtn_TrashTogglePressed")
+	self.mainBag:FindChild("SpecIcon"):SetSprite("CRB_Inventory:InvBtn_ModifyTogglePressed")
+
+	Sound.Play(Sound.PlayUI45LiftVirtual)
+end
+
+function Serenity_Bags:OnSystemEndDragDrop(strType, iData)
+	if not self.mainBag or strType == "DDGuildBankItem" or strType == "DDWarPartyBankItem" or strType == "DDGuildBankItemSplitStack" then
+		return -- TODO Investigate if there are other types
 	end
+
+	self.mainBag:FindChild("DeleteIcon"):SetSprite("CRB_Inventory:InvBtn_TrashToggleNormal")
+	self.mainBag:FindChild("SpecIcon"):SetSprite("CRB_Inventory:InvBtn_ModifyToggleNormal")
+	Sound.Play(Sound.PlayUI46PlaceVirtual)
 end
 
 function Serenity_Bags:DestroyBags()
@@ -341,9 +389,7 @@ function Serenity_Bags:GetSavedBagNames()
 			table.insert(names, v)
 		end
 	end
-	
-	Print(#names)
-	
+
 	return names
 end
 
@@ -371,7 +417,6 @@ function Serenity_Bags:InvokeBagNamingWindow(item)
 	end
 	
 	local bagNames = self:GetSavedBagNames()
-	Print(#bagNames)
 	if (#bagNames > 0) then
 		local wnd = self.BagNamingWindow:FindChild("NamesAvailable")
 		wnd:Show(true)
@@ -579,6 +624,67 @@ function Serenity_Bags:ToggleTradeSkillBag( wndHandler, wndControl, eMouseButton
 	local tAnchors = {}
 	tAnchors.nLeft, tAnchors.nTop, tAnchors.nRight, tAnchors.nBottom = self.mainBag:GetAnchorOffsets()
 	Event_FireGenericEvent("ToggleTradeskillInventoryFromBag", tAnchors)
+end
+
+function Serenity_Bags:OnTrashDrop( wndHandler, wndControl, x, y, wndSource, strType, iData, bDragDropHasBeenReset )
+	if strType == "DDBagItem" then
+		self:InvokeDeleteConfirmWindow(iData)
+		self.mainBag:FindChild("DeleteIcon"):SetSprite("CRB_Inventory:InvBtn_TrashTogglePressed")
+		self.mainBag:FindChild("TextActionPrompt_Trash"):Show(false)
+	end
+	return false
+end
+
+function Serenity_Bags:OnDragDropRequest( wndHandler, wndControl, x, y, wndSource, strType, iData, eResult )
+	if strType == "DDBagItem" then
+		return Apollo.DragDropQueryResult.Accept
+	end
+	return Apollo.DragDropQueryResult.Ignore
+end
+
+function Serenity_Bags:OnDragDropHoverTrash( wndHandler, wndControl, bMe )
+	if bMe then
+		self.mainBag:FindChild("DeleteIcon"):SetSprite("CRB_Inventory:InvBtn_TrashToggleFlyby")
+		self.mainBag:FindChild("TextActionPrompt_Trash"):Show(true)
+	else
+		self.mainBag:FindChild("DeleteIcon"):SetSprite("CRB_Inventory:InvBtn_TrashTogglePressed")
+		self.mainBag:FindChild("TextActionPrompt_Trash"):Show(false)
+	end
+end
+
+function Serenity_Bags:OnSpecDrop( wndHandler, wndControl, x, y, wndSource, strType, iData, bDragDropHasBeenReset )
+	self:InvokeBagNamingWindow(Item.GetItemFromInventoryLoc(iData):GetItemId())
+							
+	self:ResetBagItems()
+	self.mainBag:FindChild("SpecIcon"):SetSprite("CRB_Inventory:InvBtn_ModifyTogglePressed")
+	self.mainBag:FindChild("TextActionPrompt_Spec"):Show(false)
+end
+
+function Serenity_Bags:OnDragDropHoverSpec( wndHandler, wndControl, bMe )
+	if bMe then
+		self.mainBag:FindChild("SpecIcon"):SetSprite("CRB_Inventory:InvBtn_ModifyToggleFlyby")
+		self.mainBag:FindChild("TextActionPrompt_Spec"):Show(true)
+	else
+		self.mainBag:FindChild("SpecIcon"):SetSprite("CRB_Inventory:InvBtn_ModifyTogglePressed")
+		self.mainBag:FindChild("TextActionPrompt_Spec"):Show(false)
+	end
+end
+
+function Serenity_Bags:OnSalvageAll( wndHandler, wndControl, eMouseButton )
+	Event_FireGenericEvent("RequestSalvageAll", tAnchors)
+end
+
+function Serenity_Bags:OnSalvageDropRequest( wndHandler, wndControl, x, y, wndSource, strType, iData, eResult )
+	if strType == "DDBagItem" and Item.GetItemFromInventoryLoc(iData):CanSalvage() then
+		return Apollo.DragDropQueryResult.Accept
+	end
+	return Apollo.DragDropQueryResult.Ignore
+end
+
+function Serenity_Bags:OnSalvageDrop( wndHandler, wndControl, x, y, wndSource, strType, iData, bDragDropHasBeenReset )
+	if strType == "DDBagItem" and Item.GetItemFromInventoryLoc(iData):CanSalvage() then
+		self:InvokeSalvageConfirmWindow(iData)
+	end
 end
 
 ---------------------------------------------------------------------------------------------------
