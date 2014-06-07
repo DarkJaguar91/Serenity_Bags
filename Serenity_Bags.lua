@@ -105,7 +105,6 @@ function Serenity_Bags:OnDocLoaded()
 		self.mainBag:FindChild("EmptyBag"):SetSort(true)
 		self.mainBag:FindChild("EmptyBag"):SetItemSortComparer(fnSortItemsByName)
 
-	
 		self.deleteWindow = Apollo.LoadForm(self.xmlDoc, "InventoryDeleteNotice", nil, self)
 		self.deleteWindow:Show(false, true)
 		
