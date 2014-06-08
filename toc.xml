@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Addon Author="Darkjaguar91" APIVersion="8" Name="Serenity_BagsV2" Description="Bag replacement addon" Version="">
+    <Script Name="Serenity_BagsV2.lua"/>
+    <Form Name="Serenity_BagsV2.xml"/>
+    <Form Name="ImprovedSalvage.xml"/>
+    <Form Name="ItemPreview.xml"/>
+    <Script Name="ImprovedSalvage.lua"/>
+    <Script Name="ItemPreview.lua"/>
+    <ReplaceAddon Name="Inventory"/>
+</Addon>
