@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Sprites>
+    <Sprite Name="Blockout" Cycle="1">
+        <Frame Texture="UI\Assets\Textures\UI_BK3_Holo_InsetFramed_Darker.tex" x0="14" x1="14" x2="14" x3="14" x4="54" x5="54" y0="14" y1="14" y2="14" y3="14" y4="53" y5="53" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+    </Sprite>
+</Sprites>

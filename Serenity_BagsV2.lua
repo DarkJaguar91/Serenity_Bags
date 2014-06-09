@@ -288,6 +288,8 @@ function Serenity_BagsV2:OnDocLoaded()
 	Apollo.RegisterEventHandler("PlayerCurrencyChanged", "ResetAll", self)
 	Apollo.RegisterEventHandler("PersonaUpdateCharacterStats", "ResetAll", self)
 	
+	Apollo.LoadSprites("SerenitySprite.xml", "SerenitySprite")
+	
 	self.wndDeleteConfirm = Apollo.LoadForm(self.xmlDoc, "InventoryDeleteNotice", nil, self)
 	self.wndSalvageConfirm 	= Apollo.LoadForm(self.xmlDoc, "InventorySalvageNotice", nil, self)
 	self.CurrenciesPopUp = Apollo.LoadForm(self.xmlDoc, "Currencies", nil, self);
@@ -496,11 +498,11 @@ function Serenity_BagsV2:ResetBagContainers()
 		bag:FindChild("Name"):SetText(i)
 		bag:SetData(i)
 	
-		if (i == "Crafting") then
+		--if (i == "Crafting") then
 			self:AddItemListToBag(bag, i, #v)
-		else	
-			self:AddItemsToBag(bag, v)
-		end
+		--else	
+		--	self:AddItemsToBag(bag, v)
+		--end
 	end
 	
 	self:ArrangeBagContainers()
@@ -543,73 +545,32 @@ function Serenity_BagsV2:ArrangeBagContainers()
 	bagContL:Show(true)
 end
 
-function Serenity_BagsV2:AddItemsToBag(bag, items)
-	table.sort(items, function(a, b) 
-		return string.lower(a.itemInBag:GetName()) < string.lower(b.itemInBag:GetName())
-	end)
-	
-	local h = 0
-	for i, v in pairs(items) do
-		local itm = Apollo.LoadForm(self.xmlDoc, "BagItem", bag:FindChild("Items"), self)
-		
-		if (h == 0 ) then h = itm:GetWidth() + 1 end
-		
-		local y = v.nBagSlot * h
-		
-		itm:FindChild("BItm"):SetAnchorOffsets(0, -y, 0, 0)
-	end
-	
-	--sizing
-	do
-		bag:SetAnchorPoints(0, 1, 1, 1)
-		local y = math.ceil(#items / 7)
-		bag:SetAnchorOffsets(0, -(y * (h) + 22), 0, 0)
-	end
-	
-	bag:FindChild("Items"):ArrangeChildrenTiles()
-end
-
 function Serenity_BagsV2:AddItemListToBag(bag, catagory, numItems)
-	local numLists = math.ceil(numItems / 8)
-	Print(catagory)
-	Print("Lists: " .. numLists)
-	for i = 1, numLists do
-		local list = Apollo.LoadForm(self.xmlDoc, "BagList", bag:FindChild("Items"), self)
-		local bitm = list:FindChild("BItm")
-		bitm:SetSort(true)
-		bitm:SetItemSortComparer(fnSort[catagory])
+	local numToNotShow = 8 - numItems % 8
+	
+	local list = Apollo.LoadForm(self.xmlDoc, "BagList", bag:FindChild("Items"), self)
+	list:SetAnchorPoints(0,0,1,1)
+	list:SetAnchorOffsets(0,0,0,0)
 
-		local num = 8
-		if ((numItems - ((i-1) * 8)) < 8) then
-			num = (numItems - ((i-1) * 8))
-		end
-		Print("NumItems" .. num)
-		bitm:SetBoxesPerRow(num)
-		
-		do -- bitm sizing to move to correct position
-			local l = ((i-1) * 8) * -44
-			local r = 0
-			Print("Move Left: " .. l)
-			list:SetAnchorPoints(0,0,1,1)
-			list:SetAnchorOffsets(l, 0, r, 0)
-		end
-		
-		do -- list item (remove items on the left
-			local l = 0
-			local r = (num) * 44
-			
-			list:SetAnchorPoints(0,0,0,0)
-			list:SetAnchorOffsets(l, 0, r, 43)
-		end
+	list:FindChild("BItm"):SetSort(true)
+	list:FindChild("BItm"):SetItemSortComparer(fnSort[catagory])
+	list:FindChild("BItm"):SetBoxesPerRow(8)
+	
+	local blocker = list:FindChild("Blocker")
+	if numToNotShow == 8 then
+		blocker:Show(false)
+	else
+		blocker:Show(true)
+		blocker:SetAnchorPoints(1,1,1,1)
+		blocker:SetAnchorOffsets(-(numToNotShow * 44), -43, 0, 0)
+		blocker:SetTooltip(catagory)
 	end
 	
-	-- sizing
 	do
 		bag:SetAnchorPoints(0, 1, 1, 1)
-		local y = numLists
-		bag:SetAnchorOffsets(0, -(y * (43) + 22), 0, 0)
+		local y = math.ceil(numItems / 8)
+		bag:SetAnchorOffsets(0, -(y * (44) + 22), 0, 0)
 	end
-	bag:FindChild("Items"):ArrangeChildrenVert()
 end
 
 ---------------------------------------------------------------------------------------------------
