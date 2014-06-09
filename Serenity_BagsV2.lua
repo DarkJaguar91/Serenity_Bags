@@ -482,7 +482,7 @@ function Serenity_BagsV2:ResetMainBar()
 		local y = (totalBagSlots-1) * 29
 		
 		emptyBagFrame:SetAnchorPoints(0,0,1,1)
-		emptyBagFrame:SetAnchorOffsets(0, -y,0,0)
+		emptyBagFrame:SetAnchorOffsets(0,-y,0,0)
 		emptyBagFrame:Show(true)
 	else
 		emptyBagFrame:Show(false)
