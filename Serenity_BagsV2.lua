@@ -41,19 +41,19 @@ local CatToBag = {
 local fnSort = {
 	["Armor"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Armor" and b:GetItemFamilyName() == "Armor") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Armor") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Armor") then
 						return 1
 					elseif (a:GetItemFamilyName() == "Gear" and b:GetItemFamilyName() == "Gear") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Gear") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Gear") then
 						return 1
 					elseif (a:GetItemFamilyName() == "Weapon" and b:GetItemFamilyName() == "Weapon") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Weapon") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Weapon") then
@@ -64,7 +64,7 @@ local fnSort = {
 				end,
 	["Brocken Item"] = function(a, b) 
 						if (a:GetItemFamilyName() == "Brocken Item" and b:GetItemFamilyName() == "Brocken Item") then
-							return 0
+							return a:GetName() < b:GetName()
 						elseif (a:GetItemFamilyName() == "Brocken Item") then
 							return -1
 						elseif (b:GetItemFamilyName() == "Brocken Item") then
@@ -73,7 +73,7 @@ local fnSort = {
 					end,
 	["Charged Item"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Charged Item" and b:GetItemFamilyName() == "Charged Item") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Charged Item") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Charged Item") then
@@ -82,7 +82,7 @@ local fnSort = {
 				end,
 	["Costume"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Costume" and b:GetItemFamilyName() == "Costume") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Costume") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Costume") then
@@ -91,7 +91,7 @@ local fnSort = {
 				end,
 	["Miscellaneous"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Miscellaneous" and b:GetItemFamilyName() == "Miscellaneous") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Miscellaneous") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Miscellaneous") then
@@ -100,7 +100,7 @@ local fnSort = {
 				end,
 	["Tool"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Tool" and b:GetItemFamilyName() == "Tool") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Tool") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Tool") then
@@ -109,7 +109,7 @@ local fnSort = {
 				end,
 	["Consumable"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Consumable" and b:GetItemFamilyName() == "Consumable") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Consumable") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Consumable") then
@@ -118,7 +118,7 @@ local fnSort = {
 				end,
 	["Unusual Component"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Unusual Component" and b:GetItemFamilyName() == "Unusual Component") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Unusual Component") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Unusual Component") then
@@ -127,7 +127,7 @@ local fnSort = {
 				end,
 	["Warplot"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Warplot" and b:GetItemFamilyName() == "Warplot") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Warplot") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Warplot") then
@@ -136,7 +136,7 @@ local fnSort = {
 				end,
 	["Reagent"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Reagent" and b:GetItemFamilyName() == "Reagent") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Reagent") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Reagent") then
@@ -145,7 +145,7 @@ local fnSort = {
 				end,
 	["Runes"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Runes" and b:GetItemFamilyName() == "Runes") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Runes") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Runes") then
@@ -154,7 +154,7 @@ local fnSort = {
 				end,
 	["Schematic"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Schematic" and b:GetItemFamilyName() == "Schematic") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Schematic") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Schematic") then
@@ -163,7 +163,7 @@ local fnSort = {
 				end,
 	["Path"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Path" and b:GetItemFamilyName() == "Path") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Path") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Path") then
@@ -172,7 +172,7 @@ local fnSort = {
 				end,
 	["Housing"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Housing" and b:GetItemFamilyName() == "Housing") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Housing") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Housing") then
@@ -181,7 +181,7 @@ local fnSort = {
 				end,
 	["AMP"] = function(a, b) 
 					if (a:GetItemFamilyName() == "AMP" and b:GetItemFamilyName() == "AMP") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "AMP") then
 						return -1
 					elseif (b:GetItemFamilyName() == "AMP") then
@@ -190,7 +190,7 @@ local fnSort = {
 				end,
 	["Crafting"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Crafting" and b:GetItemFamilyName() == "Crafting") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Crafting") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Crafting") then
@@ -208,7 +208,7 @@ local fnSort = {
 				end,
 	["Bag"] = function(a, b) 
 					if (a:GetItemFamilyName() == "Bag" and b:GetItemFamilyName() == "Bag") then
-						return 0
+						return a:GetName() < b:GetName()
 					elseif (a:GetItemFamilyName() == "Bag") then
 						return -1
 					elseif (b:GetItemFamilyName() == "Bag") then
@@ -629,7 +629,7 @@ function Serenity_BagsV2:AddItemListToBag(bag, catagory, numItems)
 	do
 		bag:SetAnchorPoints(0, 1, 1, 1)
 		local y = math.ceil(numItems / 8)
-		bag:SetAnchorOffsets(0, -(y * (44) + 22), 0, 0)
+		bag:SetAnchorOffsets(0, -(y * (44) + 27), 0, 0)
 	end
 end
 
