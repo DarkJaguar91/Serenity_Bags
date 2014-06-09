@@ -290,6 +290,7 @@ function Serenity_BagsV2:OnDocLoaded()
 	Apollo.RegisterEventHandler("ToggleInventory", "OnToggleVisibility", self)
 	--Apollo.RegisterEventHandler("ShowInventory", "OnToggleVisibility", self) -- might not be needed
 	Apollo.RegisterEventHandler("VendorItemsUpdated", "OnVendorWindowInvoke", self)
+
 	
 	-- drag drop events
 	Apollo.RegisterEventHandler("DragDropSysBegin", "OnSystemBeginDragDrop", self)
@@ -305,7 +306,8 @@ function Serenity_BagsV2:OnDocLoaded()
 	Apollo.RegisterEventHandler("QuestStateChanged", "ResetBagContainers", self)
 	Apollo.RegisterEventHandler("ChallengeUpdated", "ResetBagContainers", self)
 	Apollo.RegisterEventHandler("LootedItem",	"ResetBagContainers", self)
-	--Apollo.RegisterEventHandler("UpdateInventory", "ResetBagContainers", self)
+	Apollo.RegisterEventHandler("UpdateInventory", "ResetBagContainers", self)
+--	Apollo.RegisterEventHandler("VendorItemsUpdated", "OnVendorWindowInvoke", self)
 
 	Apollo.RegisterEventHandler("PlayerCurrencyChanged", "ResetAll", self)
 	Apollo.RegisterEventHandler("PersonaUpdateCharacterStats", "ResetAll", self)
