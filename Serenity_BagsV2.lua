@@ -220,6 +220,9 @@ local fnSort = {
 local function BagItemSorter(a, b)
 	return string.lower(a:GetItemFamilyName()) < string.lower(b:GetItemFamilyName())
 end
+
+local SavedItemCategories = {}
+
 -----------------------------------------------------------------------------------------------
 -- Initialization
 -----------------------------------------------------------------------------------------------
@@ -240,6 +243,25 @@ function Serenity_BagsV2:Init()
     Apollo.RegisterAddon(self, bHasConfigureFunction, strConfigureButtonText, tDependencies)
 end
  
+function Serenity_BagsV2:OnSave(eType)
+	if eType == GameLib.CodeEnumAddonSaveLevel.Character then
+		return {
+			savedBagNames = SavedItemCategories,
+		}
+	end
+	
+	return nil
+end
+
+function Serenity_BagsV2:OnRestore(eType, tSavedData)
+	if eType == GameLib.CodeEnumAddonSaveLevel.Character  then
+		if not tSavedData then
+			return
+		end
+		
+		SavedItemCategories = tSavedData.savedBagNames
+	end	
+end
 
 -----------------------------------------------------------------------------------------------
 -- Serenity_BagsV2 OnLoad
@@ -293,10 +315,12 @@ function Serenity_BagsV2:OnDocLoaded()
 	self.wndDeleteConfirm = Apollo.LoadForm(self.xmlDoc, "InventoryDeleteNotice", nil, self)
 	self.wndSalvageConfirm 	= Apollo.LoadForm(self.xmlDoc, "InventorySalvageNotice", nil, self)
 	self.CurrenciesPopUp = Apollo.LoadForm(self.xmlDoc, "Currencies", nil, self);
+	self.bagNamer = Apollo.LoadForm(self.xmlDoc, "BagNamer", nil, self);
 	self.splitter = Apollo.LoadForm(self.xmlDoc, "SplitStackContainer", nil, self);
 	self.wndSalvageConfirm:Show(false, true)
 	self.wndDeleteConfirm:Show(false, true)
 	self.CurrenciesPopUp:Show(false, true)
+	self.bagNamer:Show(false, true)
 	self.splitter:Show(false, true)
 
 	self.frame = Apollo.LoadForm(self.xmlDoc, "MainBagForm", nil, self)
@@ -355,8 +379,10 @@ function Serenity_BagsV2:OnSystemBeginDragDrop(wndSource, strType, iData)
 	if strType ~= "DDBagItem" then return end
 	self.frame:FindChild("TextActionPrompt_Trash"):Show(false)
 	self.frame:FindChild("TextActionPrompt_Salvage"):Show(false)
+	self.frame:FindChild("TextActionPrompt_Spec"):Show(false)
 
 	self.frame:FindChild("TrashIcon"):SetSprite("CRB_Inventory:InvBtn_TrashTogglePressed")
+	self.frame:FindChild("SpecIcon"):SetSprite("CRB_Inventory:InvBtn_ModifyTogglePressed")
 
 	Sound.Play(Sound.PlayUI45LiftVirtual)
 end
@@ -367,8 +393,10 @@ function Serenity_BagsV2:OnSystemEndDragDrop(strType, iData)
 	end
 
 	self.frame:FindChild("TrashIcon"):SetSprite("CRB_Inventory:InvBtn_TrashToggleNormal")
+	self.frame:FindChild("SpecIcon"):SetSprite("CRB_Inventory:InvBtn_ModifyToggleNormal")
 	self.frame:FindChild("TextActionPrompt_Trash"):Show(false)
 	self.frame:FindChild("TextActionPrompt_Salvage"):Show(false)
+	self.frame:FindChild("TextActionPrompt_Spec"):Show(false)
 	--self:UpdateSquareSize()
 	Sound.Play(Sound.PlayUI46PlaceVirtual)
 end
@@ -467,6 +495,10 @@ if (GameLib.GetPlayerUnit()) then
 			local category = nil
 			category = v.itemInBag:GetItemFamilyName()
 		
+			if SavedItemCategories[v.itemInBag:GetItemId()] then
+				category = SavedItemCategories[v.itemInBag:GetItemId()]
+			end
+			
 			-- checks for easier use
 			if (category == "Gear" or category == "Weapon") then
 				category = "Armor"
@@ -494,7 +526,12 @@ function Serenity_BagsV2:ResetBagContainers()
 	bagContL:Show(false)
 	bagContR:Show(false)
 	for i, v in pairs(itemCat) do
-		local bag = Apollo.LoadForm(self.xmlDoc, "BagContainer", self.frame:FindChild(CatToBag[i]), self)
+		local bag = nil
+		if (CatToBag[i]) then
+			bag = Apollo.LoadForm(self.xmlDoc, "BagContainer", self.frame:FindChild(CatToBag[i]), self)
+		else 
+			bag = Apollo.LoadForm(self.xmlDoc, "BagContainer", self.frame:FindChild("BagContainerL"), self)
+		end
 		bag:FindChild("Name"):SetText(i)
 		bag:SetData(i)
 	
@@ -545,6 +582,14 @@ function Serenity_BagsV2:ArrangeBagContainers()
 	bagContL:Show(true)
 end
 
+function Serenity_BagsV2:CheckItemInBag(item, cat)
+	if SavedItemCategories[item:GetItemId()] == cat then
+		return true
+	else
+		return false
+	end
+end
+
 function Serenity_BagsV2:AddItemListToBag(bag, catagory, numItems)
 	local numToNotShow = 8 - numItems % 8
 	
@@ -553,7 +598,22 @@ function Serenity_BagsV2:AddItemListToBag(bag, catagory, numItems)
 	list:SetAnchorOffsets(0,0,0,0)
 
 	list:FindChild("BItm"):SetSort(true)
-	list:FindChild("BItm"):SetItemSortComparer(fnSort[catagory])
+	
+	if fnSort[catagory] then
+		list:FindChild("BItm"):SetItemSortComparer(fnSort[catagory])
+	else
+		list:FindChild("BItm"):SetItemSortComparer(function (a, b) 
+			if self:CheckItemInBag(a, catagory) and self:CheckItemInBag(b, catagory) then
+				return a:GetName() < b:GetName()
+			elseif self:CheckItemInBag(a, catagory) then
+				return -1
+			elseif self:CheckItemInBag(b, catagory) then
+				return 1
+			end
+			return 1
+		end)
+	end
+	
 	list:FindChild("BItm"):SetBoxesPerRow(8)
 	
 	local blocker = list:FindChild("Blocker")
@@ -689,6 +749,104 @@ function Serenity_BagsV2:OnSplitStackConfirm( wndHandler, wndControl, eMouseButt
 	local tItem = wndSplit:GetData()
 	wndSplit:Show(false)
 	self.frame:FindChild("EmptyBag"):StartSplitStack(tItem, wndSplit:FindChild("SplitValue"):GetValue())
+end
+
+function Serenity_BagsV2:OnDragDropHoverSpec( wndHandler, wndControl, bMe )
+	if bMe then
+		self.frame:FindChild("SpecIcon"):SetSprite("CRB_Inventory:InvBtn_ModifyToggleFlyby")
+		self.frame:FindChild("TextActionPrompt_Spec"):Show(true)
+	else
+		self.frame:FindChild("SpecIcon"):SetSprite("CRB_Inventory:InvBtn_ModifyTogglePressed")
+		self.frame:FindChild("TextActionPrompt_Spec"):Show(false)
+	end
+end
+
+function Serenity_BagsV2:OnSpecDrop( wndHandler, wndControl, x, y, wndSource, strType, iData, bDragDropHasBeenReset )
+	self:InvokeBagNamingWindow(Item.GetItemFromInventoryLoc(iData):GetItemId())
+							
+	self:ResetBagContainers()
+end
+
+---------------------------------------------------------------------------------------------------
+-- BagNamer Functions
+---------------------------------------------------------------------------------------------------
+
+function Serenity_BagsV2:OnSpecifyBag( wndHandler, wndControl, eMouseButton )
+	local text = self.bagNamer:FindChild("EditBox"):GetText()
+	if (text ~= "") then
+		SavedItemCategories[self.bagNamer:GetData()] = text
+	end
+
+	self:ResetBagContainers()
+	self.bagNamer:Show(false)
+end
+
+function Serenity_BagsV2:OnRemoveName( wndHandler, wndControl, eMouseButton )
+	SavedItemCategories[self.bagNamer:GetData()] = nil
+
+	self:ResetBagContainers()
+	self.bagNamer:Show(false)
+end
+
+function Serenity_BagsV2:InvokeBagNamingWindow(item) 
+	if item == nil then
+		return
+	end
+	
+	self.bagNamer:SetData(item)
+	self.bagNamer:Show(true)
+	self.bagNamer:ToFront()
+	if (SavedItemCategories[item]) then
+		self.bagNamer:FindChild("RemoveBtn"):Show(true)
+	else
+		self.bagNamer:FindChild("RemoveBtn"):Show(false)
+	end
+	
+	local bagNames = self:GetSavedBagNames()
+	if (#bagNames > 0) then
+		local wnd = self.bagNamer:FindChild("NamesAvailable")
+		wnd:Show(true)
+		local list = wnd:FindChild("ListOfNames")
+		
+		list:DestroyChildren()
+		
+		for i, v in pairs(bagNames) do
+			local bagNameWnd = Apollo.LoadForm(self.xmlDoc, "BagName", list, self)
+			bagNameWnd:FindChild("NameBtn"):SetText(v)
+		end
+		list:ArrangeChildrenVert()
+	else
+		self.bagNamer:FindChild("NamesAvailable"):Show(false)	
+	end
+	
+	self.bagNamer:FindChild("EditBox"):SetText("")
+	Sound.Play(Sound.PlayUI55ErrorVirtual)
+	self.bagNamer:FindChild("EditBox"):SetFocus()
+end
+
+function Serenity_BagsV2:tableContains(table, data)
+	for i, v in pairs(table) do
+		if (v == data) then
+			return true
+		end
+	end
+	return false
+end
+
+function Serenity_BagsV2:GetSavedBagNames()
+	local names = {}
+	
+	for i, v in pairs(SavedItemCategories) do
+		if not self:tableContains(names, v) then
+			table.insert(names, v)
+		end
+	end
+
+	return names
+end
+
+function Serenity_BagsV2:SetBagNameText( wndHandler, wndControl, eMouseButton )
+	self.bagNamer:FindChild("EditBox"):SetText(wndHandler:GetText())
 end
 
 -----------------------------------------------------------------------------------------------
