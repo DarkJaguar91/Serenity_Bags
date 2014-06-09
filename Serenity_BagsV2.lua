@@ -306,8 +306,8 @@ function Serenity_BagsV2:OnDocLoaded()
 	Apollo.RegisterEventHandler("QuestStateChanged", "ResetBagContainers", self)
 	Apollo.RegisterEventHandler("ChallengeUpdated", "ResetBagContainers", self)
 	Apollo.RegisterEventHandler("LootedItem",	"ResetBagContainers", self)
-	Apollo.RegisterEventHandler("UpdateInventory", "ResetBagContainers", self)
---	Apollo.RegisterEventHandler("VendorItemsUpdated", "OnVendorWindowInvoke", self)
+--	Apollo.RegisterEventHandler("UpdateInventory", "ResetBagContainers", self)
+	Apollo.RegisterEventHandler("ItemRemoved", "OnItemRemoved", self)
 
 	Apollo.RegisterEventHandler("PlayerCurrencyChanged", "ResetAll", self)
 	Apollo.RegisterEventHandler("PersonaUpdateCharacterStats", "ResetAll", self)
@@ -350,6 +350,15 @@ function Serenity_BagsV2:OnToggleVisibility()
 	else
 		self:OpenBag()
 	end	
+end
+
+function Serenity_BagsV2:OnItemRemoved(itemSold, nCount, eReason)
+	Print("Removing Item")
+	if eReason == Item.CodeEnumItemUpdateReason.Vendor then
+		Print("Sold the item")
+		SavedItemCategories[itemSold:GetItemId()] = nil
+	end
+	self:ResetBagContainers()
 end
 
 function Serenity_BagsV2:InvokeDeleteConfirmWindow(iData) 
@@ -519,7 +528,10 @@ if (GameLib.GetPlayerUnit()) then
 end
 
 function Serenity_BagsV2:ResetBagContainers()
+	if not self.frame:IsVisible() then return end
 	local itemCat = self:CollectBagItems()
+	
+	if (itemCat == nil) then return end
 	
 	local bagContL = self.frame:FindChild("BagContainerL")
 	local bagContR = self.frame:FindChild("BagContainerR")
@@ -849,6 +861,26 @@ end
 
 function Serenity_BagsV2:SetBagNameText( wndHandler, wndControl, eMouseButton )
 	self.bagNamer:FindChild("EditBox"):SetText(wndHandler:GetText())
+end
+
+---------------------------------------------------------------------------------------------------
+-- InventoryDeleteNotice Functions
+---------------------------------------------------------------------------------------------------
+
+function Serenity_BagsV2:OnExitNotification( wndHandler, wndControl, eMouseButton )
+	wndHandler:GetParent():Close()
+end
+
+function Serenity_BagsV2:OnDeleteConfirm( wndHandler, wndControl )
+	self.wndDeleteConfirm:Show(false)
+end
+
+---------------------------------------------------------------------------------------------------
+-- InventorySalvageNotice Functions
+---------------------------------------------------------------------------------------------------
+
+function Serenity_BagsV2:OnSalvageConfirm( wndHandler, wndControl )
+	self.wndSalvageConfirm:Show(false)
 end
 
 -----------------------------------------------------------------------------------------------
