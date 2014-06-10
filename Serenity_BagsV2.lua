@@ -15,213 +15,340 @@ local Serenity_BagsV2 = {}
 -----------------------------------------------------------------------------------------------
 local cCurrenciesSize = {["width"] = 220, ["height"] = 133}
 
-local CatToBag = {
-	["Armor"] = "BagContainerL",
-	["Broken Item"] = "BagContainerL",
-	["Charged Item"] = "BagContainerL",
-	["Costume"] = "BagContainerL",
-	["Miscellaneous"] = "BagContainerL",
-	["Tool"] = "BagContainerL",
-	["Consumable"] = "BagContainerL",
+local SavedItemCategories = {}
 
-	["Unusual Component"] = "BagContainerR",
-	["Warplot"] = "BagContainerR",
-	["Reagent"] = "BagContainerR",
-	["Runes"] = "BagContainerR",
-	["Schematic"] = "BagContainerR",
-	["Path"] = "BagContainerR",
-	["Housing"] = "BagContainerR",
-	["AMP"] = "BagContainerR",
-	["Crafting"] = "BagContainerR",
-	["Quest"] = "BagContainerR",
-	["Quest Item"] = "BagContainerR",
-	["Bag"] = "BagContainerR",
+local FamilyCodeToName = {
+	armor = 1,
+	weapon = 2,
+	gear = 15,
+	bag = 5,
+	costume = 26,
+	misc = 25,
+	consumable = 16,
+	reagent = 18,
+	rune = 33,
+	schematic = 19,
+	housing = 20,
+	amp = 32,
+	crafting = 27,
+	questItm = 24,
+	tool = 28,
+	path = 29,
+}
+
+local CatToBag = {
+	[FamilyCodeToName.armor] = "BagContainerL", -- armor
+	["Broken Item"] = "BagContainerL", -- brocken item
+	["Charged Item"] = "BagContainerL", -- charged item
+	[FamilyCodeToName.costume] = "BagContainerL", -- costume
+	[FamilyCodeToName.misc] = "BagContainerL", -- miscelaneous
+	[FamilyCodeToName.tool] = "BagContainerL", -- tool
+	[FamilyCodeToName.consumable] = "BagContainerL", -- consumable
+
+	["Unusual Component"] = "BagContainerR", -- unuslual component
+	["Warplot"] = "BagContainerR", -- warplot
+	[FamilyCodeToName.reagent] = "BagContainerR", -- reagent
+	[FamilyCodeToName.rune] = "BagContainerR", -- rune
+	[FamilyCodeToName.schematic] = "BagContainerR", --schematic
+	[FamilyCodeToName.path] = "BagContainerR", -- path
+	[FamilyCodeToName.housing] = "BagContainerR", -- housing
+	[FamilyCodeToName.amp] = "BagContainerR", -- amp
+	[FamilyCodeToName.crafting] = "BagContainerR", -- crafting
+	[100] = "BagContainerR", -- quest
+	[FamilyCodeToName.questItm] = "BagContainerR",-- quest item
+	[FamilyCodeToName.bag] = "BagContainerR", -- bag
 }
 
 local fnSort = {
-	["Armor"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Armor" and b:GetItemFamilyName() == "Armor") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Armor") then
-						return -1
-					elseif (b:GetItemFamilyName() == "Armor") then
+	[1] = function(a, b) -- armor
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
 						return 1
-					elseif (a:GetItemFamilyName() == "Gear" and b:GetItemFamilyName() == "Gear") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Gear") then
+					elseif SavedItemCategories[b:GetItemId()] then
 						return -1
-					elseif (b:GetItemFamilyName() == "Gear") then
+					elseif (a:GetItemFamily() == FamilyCodeToName.armor and b:GetItemFamily() == FamilyCodeToName.armor) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.armor) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.armor) then
 						return 1
-					elseif (a:GetItemFamilyName() == "Weapon" and b:GetItemFamilyName() == "Weapon") then
+					elseif (a:GetItemFamily() == FamilyCodeToName.gear and b:GetItemFamily() == FamilyCodeToName.gear) then
 						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Weapon") then
+					elseif (a:GetItemFamily() == FamilyCodeToName.gear) then
 						return -1
-					elseif (b:GetItemFamilyName() == "Weapon") then
+					elseif (b:GetItemFamily() == FamilyCodeToName.gear) then
+						return 1
+					elseif (a:GetItemFamily() == FamilyCodeToName.weapon and b:GetItemFamily() == FamilyCodeToName.weapon) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.weapon) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.weapon) then
 						return 1
 					else
 						return 1	
 					end
 				end,
-	["Brocken Item"] = function(a, b) 
-						if (a:GetItemFamilyName() == "Brocken Item" and b:GetItemFamilyName() == "Brocken Item") then
-							return a:GetName() < b:GetName()
-						elseif (a:GetItemFamilyName() == "Brocken Item") then
+	["Brocken Item"] = function(a, b)
+						if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+							return 0
+						elseif SavedItemCategories[a:GetItemId()] then
+							return 1
+						elseif SavedItemCategories[b:GetItemId()] then
 							return -1
-						elseif (b:GetItemFamilyName() == "Brocken Item") then
+						elseif (a:GetItemFamily() == "Brocken Item" and b:GetItemFamily() == "Brocken Item") then
+							return a:GetName() < b:GetName()
+						elseif (a:GetItemFamily() == "Brocken Item") then
+							return -1
+						elseif (b:GetItemFamily() == "Brocken Item") then
 							return 1
 						end
 					end,
-	["Charged Item"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Charged Item" and b:GetItemFamilyName() == "Charged Item") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Charged Item") then
+	["Charged Item"] = function(a, b)
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
 						return -1
-					elseif (b:GetItemFamilyName() == "Charged Item") then
+					elseif (a:GetItemFamily() == "Charged Item" and b:GetItemFamily() == "Charged Item") then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == "Charged Item") then
+						return -1
+					elseif (b:GetItemFamily() == "Charged Item") then
 						return 1
 					end
 				end,
-	["Costume"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Costume" and b:GetItemFamilyName() == "Costume") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Costume") then
+	[26] = function(a, b)  --costume
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
 						return -1
-					elseif (b:GetItemFamilyName() == "Costume") then
+					elseif (a:GetItemFamily() == FamilyCodeToName.costume and b:GetItemFamily() == FamilyCodeToName.costume) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.costume) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.costume) then
 						return 1
 					end
 				end,
-	["Miscellaneous"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Miscellaneous" and b:GetItemFamilyName() == "Miscellaneous") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Miscellaneous") then
+	[25] = function(a, b) -- Miscellaneous
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
 						return -1
-					elseif (b:GetItemFamilyName() == "Miscellaneous") then
+					elseif (a:GetItemFamily() == FamilyCodeToName.misc and b:GetItemFamily() == FamilyCodeToName.misc) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.misc) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.misc) then
 						return 1
 					end
 				end,
-	["Tool"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Tool" and b:GetItemFamilyName() == "Tool") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Tool") then
+	[FamilyCodeToName.tool] = function(a, b) 
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
 						return -1
-					elseif (b:GetItemFamilyName() == "Tool") then
+					elseif (a:GetItemFamily() == FamilyCodeToName.tool and b:GetItemFamily() == FamilyCodeToName.tool) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.tool) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.tool) then
 						return 1
 					end
 				end,
-	["Consumable"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Consumable" and b:GetItemFamilyName() == "Consumable") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Consumable") then
+	[16] = function(a, b) -- Consumable
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
 						return -1
-					elseif (b:GetItemFamilyName() == "Consumable") then
+					elseif (a:GetItemFamily() == FamilyCodeToName.consumable and b:GetItemFamily() == FamilyCodeToName.consumable) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.consumable) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.consumable) then
 						return 1
 					end
 				end,
 	["Unusual Component"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Unusual Component" and b:GetItemFamilyName() == "Unusual Component") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Unusual Component") then
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
 						return -1
-					elseif (b:GetItemFamilyName() == "Unusual Component") then
+					elseif (a:GetItemFamily() == "Unusual Component" and b:GetItemFamily() == "Unusual Component") then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == "Unusual Component") then
+						return -1
+					elseif (b:GetItemFamily() == "Unusual Component") then
 						return 1
 					end
 				end,
 	["Warplot"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Warplot" and b:GetItemFamilyName() == "Warplot") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Warplot") then
-						return -1
-					elseif (b:GetItemFamilyName() == "Warplot") then
-						return 1
-					end
-				end,
-	["Reagent"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Reagent" and b:GetItemFamilyName() == "Reagent") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Reagent") then
-						return -1
-					elseif (b:GetItemFamilyName() == "Reagent") then
-						return 1
-					end
-				end,
-	["Runes"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Runes" and b:GetItemFamilyName() == "Runes") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Runes") then
-						return -1
-					elseif (b:GetItemFamilyName() == "Runes") then
-						return 1
-					end
-				end,
-	["Schematic"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Schematic" and b:GetItemFamilyName() == "Schematic") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Schematic") then
-						return -1
-					elseif (b:GetItemFamilyName() == "Schematic") then
-						return 1
-					end
-				end,
-	["Path"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Path" and b:GetItemFamilyName() == "Path") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Path") then
-						return -1
-					elseif (b:GetItemFamilyName() == "Path") then
-						return 1
-					end
-				end,
-	["Housing"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Housing" and b:GetItemFamilyName() == "Housing") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Housing") then
-						return -1
-					elseif (b:GetItemFamilyName() == "Housing") then
-						return 1
-					end
-				end,
-	["AMP"] = function(a, b) 
-					if (a:GetItemFamilyName() == "AMP" and b:GetItemFamilyName() == "AMP") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "AMP") then
-						return -1
-					elseif (b:GetItemFamilyName() == "AMP") then
-						return 1
-					end
-				end,
-	["Crafting"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Crafting" and b:GetItemFamilyName() == "Crafting") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Crafting") then
-						return -1
-					elseif (b:GetItemFamilyName() == "Crafting") then
-						return 1
-					end
-				end,
-	["Quest Item"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Quest Item" and b:GetItemFamilyName() == "Quest Item") then
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
-					elseif (a:GetItemFamilyName() == "Quest Item") then
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
 						return -1
-					elseif (b:GetItemFamilyName() == "Quest Item") then
+					elseif (a:GetItemFamily() == "Warplot" and b:GetItemFamily() == "Warplot") then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == "Warplot") then
+						return -1
+					elseif (b:GetItemFamily() == "Warplot") then
 						return 1
 					end
 				end,
-	["Bag"] = function(a, b) 
-					if (a:GetItemFamilyName() == "Bag" and b:GetItemFamilyName() == "Bag") then
-						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamilyName() == "Bag") then
+	[18] = function(a, b) -- reagent
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
 						return -1
-					elseif (b:GetItemFamilyName() == "Bag") then
+					elseif (a:GetItemFamily() == FamilyCodeToName.reagent and b:GetItemFamily() == FamilyCodeToName.reagent) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.reagent) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.reagent) then
+						return 1
+					end
+				end,
+	[33] = function(a, b) -- runes
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
+						return -1
+					elseif (a:GetItemFamily() == FamilyCodeToName.rune and b:GetItemFamily() == FamilyCodeToName.rune) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.rune) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.rune) then
+						return 1
+					end
+				end,
+	[19] = function(a, b) -- schematic
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
+						return -1
+					elseif (a:GetItemFamily() == FamilyCodeToName.schematic and b:GetItemFamily() == FamilyCodeToName.schematic) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.schematic) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.schematic) then
+						return 1
+					end
+				end,
+	[FamilyCodeToName.path] = function(a, b) 
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
+						return -1
+					elseif (a:GetItemFamily() == FamilyCodeToName.path and b:GetItemFamily() == FamilyCodeToName.path) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.path) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.path) then
+						return 1
+					end
+				end,
+	[20] = function(a, b) -- housing
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
+						return -1
+					elseif (a:GetItemFamily() == FamilyCodeToName.housing and b:GetItemFamily() == FamilyCodeToName.housing) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.housing) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.housing) then
+						return 1
+					end
+				end,
+	[32] = function(a, b) -- amp
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
+						return -1
+					elseif (a:GetItemFamily() == FamilyCodeToName.amp and b:GetItemFamily() == FamilyCodeToName.amp) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.amp) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.amp) then
+						return 1
+					end
+				end,
+	[27] = function(a, b) -- crafting
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
+						return -1
+					elseif (a:GetItemFamily() == FamilyCodeToName.crafting and b:GetItemFamily() == FamilyCodeToName.crafting) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.crafting) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.crafting) then
+						return 1
+					end
+				end,
+	[24] = function(a, b) -- quest item
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
+						return -1
+					elseif (a:GetItemFamily() == FamilyCodeToName.questItm and b:GetItemFamily() == FamilyCodeToName.questItm) then
+						return 0
+					elseif (a:GetItemFamily() == FamilyCodeToName.questItm) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.questItm) then
+						return 1
+					end
+				end,
+	[5] = function(a, b) 
+					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
+						return 0
+					elseif SavedItemCategories[a:GetItemId()] then
+						return 1
+					elseif SavedItemCategories[b:GetItemId()] then
+						return -1
+					elseif (a:GetItemFamily() == FamilyCodeToName.bag and b:GetItemFamily() == FamilyCodeToName.bag) then
+						return a:GetName() < b:GetName()
+					elseif (a:GetItemFamily() == FamilyCodeToName.bag) then
+						return -1
+					elseif (b:GetItemFamily() == FamilyCodeToName.bag) then
 						return 1
 					end
 				end,
 }
 
 local function BagItemSorter(a, b)
-	return string.lower(a:GetItemFamilyName()) < string.lower(b:GetItemFamilyName())
+	return string.lower(a:GetItemFamily()) < string.lower(b:GetItemFamily())
 end
-
-local SavedItemCategories = {}
 
 -----------------------------------------------------------------------------------------------
 -- Initialization
@@ -353,9 +480,7 @@ function Serenity_BagsV2:OnToggleVisibility()
 end
 
 function Serenity_BagsV2:OnItemRemoved(itemSold, nCount, eReason)
-	Print("Removing Item")
 	if eReason == Item.CodeEnumItemUpdateReason.Vendor then
-		Print("Sold the item")
 		SavedItemCategories[itemSold:GetItemId()] = nil
 	end
 	self:ResetBagContainers()
@@ -491,8 +616,12 @@ function Serenity_BagsV2:ResetMainBar()
 	
 	for i = 1, 4 do
 		local wnd = self.frame:FindChild("Bag" .. i)
-		wnd:FindChild("Number"):SetText(wnd:GetItem():GetBagSlots())
-		Tooltip.GetItemTooltipForm(self, wnd, self.frame:FindChild("EmptyBag"):GetBagItem(i), {bPrimary = true, bSelling = false, itemCompare = itemEquipped})
+		if self.frame:FindChild("EmptyBag"):GetBagItem(i) and wnd:GetItem() then
+			wnd:FindChild("Number"):SetText(wnd:GetItem():GetBagSlots())
+			Tooltip.GetItemTooltipForm(self, wnd, self.frame:FindChild("EmptyBag"):GetBagItem(i), {bPrimary = true, bSelling = false, itemCompare = itemEquipped})
+		else
+			wnd:FindChild("Number"):SetText("")
+		end
 	end
 end
 
@@ -503,24 +632,29 @@ if (GameLib.GetPlayerUnit()) then
 		local categories = {}
 		
 		for i, v in pairs(items) do
-			local category = nil
-			category = v.itemInBag:GetItemFamilyName()
-			Print(v.itemInBag:GetItemFamilyName() .. " - " .. v.itemInBag:GetItemFamily())
-
-			if SavedItemCategories[v.itemInBag:GetItemId()] then
-				category = SavedItemCategories[v.itemInBag:GetItemId()]
-			end
+			local category = v.itemInBag:GetItemFamilyName()
+			local catCode = v.itemInBag:GetItemFamily()
 			
 			-- checks for easier use
-			if (category == "Gear" or category == "Weapon") then
+			if (catCode == FamilyCodeToName.gear or catCode == FamilyCodeToName.weapon) then
+				catCode = FamilyCodeToName.armor
 				category = "Armor"
 			end
 			
-			if categories[category] == nil then
-				categories[category] = {}
+			if SavedItemCategories[v.itemInBag:GetItemId()] then
+				category = SavedItemCategories[v.itemInBag:GetItemId()]
+				catCode = category
 			end
 			
-			table.insert(categories[category], v)
+			if fnSort[catCode] == nil and SavedItemCategories[v.itemInBag:GetItemId()] == nil then
+				Print("Issue encountered: Please notify addon creator that: ItemFamilyCode is " .. catCode .. " for family name " .. category)
+			end
+			
+			if categories[catCode] == nil then
+				categories[catCode] = {{}, category} -- TODO 
+			end
+			
+			table.insert(categories[catCode][1], v)
 		end
 			
 		return categories
@@ -538,8 +672,6 @@ function Serenity_BagsV2:ResetBagContainers()
 	local bagContR = self.frame:FindChild("BagContainerR")
 	bagContL:DestroyChildren()
 	bagContR:DestroyChildren()
-	bagContL:Show(false)
-	bagContR:Show(false)
 	for i, v in pairs(itemCat) do
 		local bag = nil
 		if (CatToBag[i]) then
@@ -547,14 +679,11 @@ function Serenity_BagsV2:ResetBagContainers()
 		else 
 			bag = Apollo.LoadForm(self.xmlDoc, "BagContainer", self.frame:FindChild("BagContainerL"), self)
 		end
-		bag:FindChild("Name"):SetText(i)
-		bag:SetData(i)
+
+		bag:FindChild("Name"):SetText(v[2])
+		bag:SetData(v[2])
 	
-		--if (i == "Crafting") then
-			self:AddItemListToBag(bag, i, #v)
-		--else	
-		--	self:AddItemsToBag(bag, v)
-		--end
+		self:AddItemListToBag(bag, i, #v[1])
 	end
 	
 	self:ArrangeBagContainers()
@@ -573,8 +702,6 @@ function Serenity_BagsV2:ArrangeBagContainers()
 		return a:GetData() > b:GetData()
 	end)
 	
-	bagContR:Show(false)
-	bagContL:Show(false)
 	local y = 0
 	
 	-- right	
@@ -605,7 +732,7 @@ function Serenity_BagsV2:CheckItemInBag(item, cat)
 	end
 end
 
-function Serenity_BagsV2:AddItemListToBag(bag, catagory, numItems)
+function Serenity_BagsV2:AddItemListToBag(bag, catCode, numItems)
 	local numToNotShow = 8 - numItems % 8
 	
 	local list = Apollo.LoadForm(self.xmlDoc, "BagList", bag:FindChild("Items"), self)
@@ -613,16 +740,15 @@ function Serenity_BagsV2:AddItemListToBag(bag, catagory, numItems)
 	list:SetAnchorOffsets(0,0,0,0)
 
 	list:FindChild("BItm"):SetSort(true)
-	
-	if fnSort[catagory] then
-		list:FindChild("BItm"):SetItemSortComparer(fnSort[catagory])
+	if fnSort[catCode] then
+		list:FindChild("BItm"):SetItemSortComparer(fnSort[catCode])
 	else
 		list:FindChild("BItm"):SetItemSortComparer(function (a, b) 
-			if self:CheckItemInBag(a, catagory) and self:CheckItemInBag(b, catagory) then
+			if self:CheckItemInBag(a, catCode) and self:CheckItemInBag(b, catCode) then
 				return a:GetName() < b:GetName()
-			elseif self:CheckItemInBag(a, catagory) then
+			elseif self:CheckItemInBag(a, catCode) then
 				return -1
-			elseif self:CheckItemInBag(b, catagory) then
+			elseif self:CheckItemInBag(b, catCode) then
 				return 1
 			end
 			return 1
@@ -638,7 +764,7 @@ function Serenity_BagsV2:AddItemListToBag(bag, catagory, numItems)
 		blocker:Show(true)
 		blocker:SetAnchorPoints(1,1,1,1)
 		blocker:SetAnchorOffsets(-(numToNotShow * 44), -43, 0, 0)
-		blocker:SetTooltip(catagory)
+		blocker:SetTooltip(bag:GetData())
 	end
 	
 	do
