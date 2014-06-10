@@ -461,9 +461,7 @@ function Serenity_BagsV2:OnToggleVisibility()
 end
 
 function Serenity_BagsV2:OnItemRemoved(itemSold, nCount, eReason)
-	Print("Removing Item")
 	if eReason == Item.CodeEnumItemUpdateReason.Vendor then
-		Print("Sold the item")
 		SavedItemCategories[itemSold:GetItemId()] = nil
 	end
 	self:ResetBagContainers()
@@ -655,8 +653,6 @@ function Serenity_BagsV2:ResetBagContainers()
 	local bagContR = self.frame:FindChild("BagContainerR")
 	bagContL:DestroyChildren()
 	bagContR:DestroyChildren()
-	bagContL:Show(false)
-	bagContR:Show(false)
 	for i, v in pairs(itemCat) do
 		local bag = nil
 		if (CatToBag[i]) then
@@ -686,8 +682,6 @@ function Serenity_BagsV2:ArrangeBagContainers()
 		return a:GetData() > b:GetData()
 	end)
 	
-	bagContR:Show(false)
-	bagContL:Show(false)
 	local y = 0
 	
 	-- right	
