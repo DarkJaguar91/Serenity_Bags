@@ -34,6 +34,7 @@ local FamilyCodeToName = {
 	questItm = 24,
 	tool = 28,
 	path = 29,
+	unusual = 31,
 }
 
 local CatToBag = {
@@ -45,7 +46,7 @@ local CatToBag = {
 	[FamilyCodeToName.tool] = "BagContainerL", -- tool
 	[FamilyCodeToName.consumable] = "BagContainerL", -- consumable
 
-	["Unusual Component"] = "BagContainerR", -- unuslual component
+	[FamilyCodeToName.unusual] = "BagContainerR", -- unuslual component
 	["Warplot"] = "BagContainerR", -- warplot
 	[FamilyCodeToName.reagent] = "BagContainerR", -- reagent
 	[FamilyCodeToName.rune] = "BagContainerR", -- rune
@@ -60,7 +61,7 @@ local CatToBag = {
 }
 
 local fnSort = {
-	[1] = function(a, b) -- armor
+	[FamilyCodeToName.armor] = function(a, b) -- armor
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
 					elseif SavedItemCategories[a:GetItemId()] then
@@ -119,7 +120,7 @@ local fnSort = {
 						return 1
 					end
 				end,
-	[26] = function(a, b)  --costume
+	[FamilyCodeToName.costume] = function(a, b)  --costume
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
 					elseif SavedItemCategories[a:GetItemId()] then
@@ -134,7 +135,7 @@ local fnSort = {
 						return 1
 					end
 				end,
-	[25] = function(a, b) -- Miscellaneous
+	[FamilyCodeToName.misc] = function(a, b) -- Miscellaneous
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
 					elseif SavedItemCategories[a:GetItemId()] then
@@ -164,7 +165,7 @@ local fnSort = {
 						return 1
 					end
 				end,
-	[16] = function(a, b) -- Consumable
+	[FamilyCodeToName.consumable] = function(a, b) -- Consumable
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
 					elseif SavedItemCategories[a:GetItemId()] then
@@ -179,18 +180,18 @@ local fnSort = {
 						return 1
 					end
 				end,
-	["Unusual Component"] = function(a, b) 
+	[FamilyCodeToName.unusual] = function(a, b) 
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
 					elseif SavedItemCategories[a:GetItemId()] then
 						return 1
 					elseif SavedItemCategories[b:GetItemId()] then
 						return -1
-					elseif (a:GetItemFamily() == "Unusual Component" and b:GetItemFamily() == "Unusual Component") then
+					elseif (a:GetItemFamily() == FamilyCodeToName.unusual and b:GetItemFamily() == FamilyCodeToName.unusual) then
 						return a:GetName() < b:GetName()
-					elseif (a:GetItemFamily() == "Unusual Component") then
+					elseif (a:GetItemFamily() == FamilyCodeToName.unusual) then
 						return -1
-					elseif (b:GetItemFamily() == "Unusual Component") then
+					elseif (b:GetItemFamily() == FamilyCodeToName.unusual) then
 						return 1
 					end
 				end,
@@ -209,7 +210,7 @@ local fnSort = {
 						return 1
 					end
 				end,
-	[18] = function(a, b) -- reagent
+	[FamilyCodeToName.reagent] = function(a, b) -- reagent
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
 					elseif SavedItemCategories[a:GetItemId()] then
@@ -224,7 +225,7 @@ local fnSort = {
 						return 1
 					end
 				end,
-	[33] = function(a, b) -- runes
+	[FamilyCodeToName.rune] = function(a, b) -- runes
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
 					elseif SavedItemCategories[a:GetItemId()] then
@@ -239,7 +240,7 @@ local fnSort = {
 						return 1
 					end
 				end,
-	[19] = function(a, b) -- schematic
+	[FamilyCodeToName.schematic] = function(a, b) -- schematic
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
 					elseif SavedItemCategories[a:GetItemId()] then
@@ -269,7 +270,7 @@ local fnSort = {
 						return 1
 					end
 				end,
-	[20] = function(a, b) -- housing
+	[FamilyCodeToName.housing] = function(a, b) -- housing
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
 					elseif SavedItemCategories[a:GetItemId()] then
@@ -284,7 +285,7 @@ local fnSort = {
 						return 1
 					end
 				end,
-	[32] = function(a, b) -- amp
+	[FamilyCodeToName.amp] = function(a, b) -- amp
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
 					elseif SavedItemCategories[a:GetItemId()] then
@@ -299,7 +300,7 @@ local fnSort = {
 						return 1
 					end
 				end,
-	[27] = function(a, b) -- crafting
+	[FamilyCodeToName.crafting] = function(a, b) -- crafting
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
 					elseif SavedItemCategories[a:GetItemId()] then
@@ -314,7 +315,7 @@ local fnSort = {
 						return 1
 					end
 				end,
-	[24] = function(a, b) -- quest item
+	[FamilyCodeToName.questItm] = function(a, b) -- quest item
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
 					elseif SavedItemCategories[a:GetItemId()] then
@@ -329,7 +330,7 @@ local fnSort = {
 						return 1
 					end
 				end,
-	[5] = function(a, b) 
+	[FamilyCodeToName.bag] = function(a, b) 
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
 						return 0
 					elseif SavedItemCategories[a:GetItemId()] then
@@ -437,7 +438,7 @@ function Serenity_BagsV2:OnDocLoaded()
 	Apollo.RegisterEventHandler("ItemRemoved", "OnItemRemoved", self)
 
 	Apollo.RegisterEventHandler("PlayerCurrencyChanged", "ResetAll", self)
-	Apollo.RegisterEventHandler("PersonaUpdateCharacterStats", "ResetAll", self)
+	--Apollo.RegisterEventHandler("PersonaUpdateCharacterStats", "ResetAll", self)
 	
 	Apollo.LoadSprites("SerenitySprite.xml", "SerenitySprite")
 	
