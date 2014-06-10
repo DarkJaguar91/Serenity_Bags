@@ -505,7 +505,8 @@ if (GameLib.GetPlayerUnit()) then
 		for i, v in pairs(items) do
 			local category = nil
 			category = v.itemInBag:GetItemFamilyName()
-		
+			Print(v.itemInBag:GetItemFamilyName() .. " - " .. v.itemInBag:GetItemFamily())
+
 			if SavedItemCategories[v.itemInBag:GetItemId()] then
 				category = SavedItemCategories[v.itemInBag:GetItemId()]
 			end
