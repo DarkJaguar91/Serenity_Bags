@@ -433,7 +433,7 @@ function Serenity_BagsV2:OnDocLoaded()
 	Apollo.RegisterEventHandler("QuestStateChanged", "ResetBagContainers", self)
 	Apollo.RegisterEventHandler("ChallengeUpdated", "ResetBagContainers", self)
 	Apollo.RegisterEventHandler("LootedItem",	"ResetBagContainers", self)
---	Apollo.RegisterEventHandler("UpdateInventory", "ResetBagContainers", self)
+	Apollo.RegisterEventHandler("UpdateInventory", "ResetBagContainers", self)
 	Apollo.RegisterEventHandler("ItemRemoved", "OnItemRemoved", self)
 
 	Apollo.RegisterEventHandler("PlayerCurrencyChanged", "ResetAll", self)
