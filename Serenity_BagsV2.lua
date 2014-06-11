@@ -14,8 +14,13 @@ local Serenity_BagsV2 = {}
 -- Constants
 -----------------------------------------------------------------------------------------------
 local cCurrenciesSize = {["width"] = 220, ["height"] = 133}
-
 local SavedItemCategories = {}
+
+local bagTheme = {
+	serenity = 1,
+	adiBags = 2,
+}
+local currentTheme = bagTheme.serenity
 
 local FamilyCodeToName = {
 	armor = 1,
@@ -42,28 +47,33 @@ local FamilyCodeToName = {
 	rune = 33,
 }
 
-local CatToBag = {
-	[FamilyCodeToName.armor] = "BagContainerL", -- armor
-	[FamilyCodeToName.brocken] = "BagContainerL", -- brocken item
-	[FamilyCodeToName.charged] = "BagContainerL", -- charged item
-	[FamilyCodeToName.costume] = "BagContainerL", -- costume
-	[FamilyCodeToName.misc] = "BagContainerL", -- miscelaneous
-	[FamilyCodeToName.tool] = "BagContainerL", -- tool
-	[FamilyCodeToName.consumable] = "BagContainerL", -- consumable
+local bagNames = {
+	leftBag = "BagContainerL",
+	rightBag = "BagContainerR",
+}
 
-	[FamilyCodeToName.fam22] = "BagContainerR", -- family-22
-	[FamilyCodeToName.unusual] = "BagContainerR", -- unuslual component
-	[FamilyCodeToName.warplot] = "BagContainerR", -- warplot
-	[FamilyCodeToName.reagent] = "BagContainerR", -- reagent
-	[FamilyCodeToName.rune] = "BagContainerR", -- rune
-	[FamilyCodeToName.schematic] = "BagContainerR", --schematic
-	[FamilyCodeToName.path] = "BagContainerR", -- path
-	[FamilyCodeToName.housing] = "BagContainerR", -- housing
-	[FamilyCodeToName.housingExt] = "BagContainerR", -- housing exterior
-	[FamilyCodeToName.amp] = "BagContainerR", -- amp
-	[FamilyCodeToName.crafting] = "BagContainerR", -- crafting
-	[FamilyCodeToName.questItm] = "BagContainerR",-- quest item
-	[FamilyCodeToName.bag] = "BagContainerR", -- bag
+local CatToBag = {
+	[FamilyCodeToName.armor] = bagNames.leftBag, -- armor
+	[FamilyCodeToName.brocken] = bagNames.leftBag, -- brocken item
+	[FamilyCodeToName.charged] = bagNames.leftBag, -- charged item
+	[FamilyCodeToName.costume] = bagNames.leftBag, -- costume
+	[FamilyCodeToName.misc] = bagNames.leftBag, -- miscelaneous
+	[FamilyCodeToName.tool] = bagNames.leftBag, -- tool
+	[FamilyCodeToName.consumable] = bagNames.leftBag, -- consumable
+
+	[FamilyCodeToName.fam22] = bagNames.rightBag, -- family-22
+	[FamilyCodeToName.unusual] = bagNames.rightBag, -- unuslual component
+	[FamilyCodeToName.warplot] = bagNames.rightBag, -- warplot
+	[FamilyCodeToName.reagent] = bagNames.rightBag, -- reagent
+	[FamilyCodeToName.rune] = bagNames.rightBag, -- rune
+	[FamilyCodeToName.schematic] = bagNames.rightBag, --schematic
+	[FamilyCodeToName.path] = bagNames.rightBag, -- path
+	[FamilyCodeToName.housing] = bagNames.rightBag, -- housing
+	[FamilyCodeToName.housingExt] = bagNames.rightBag, -- housing exterior
+	[FamilyCodeToName.amp] = bagNames.rightBag, -- amp
+	[FamilyCodeToName.crafting] = bagNames.rightBag, -- crafting
+	[FamilyCodeToName.questItm] = bagNames.rightBag,-- quest item
+	[FamilyCodeToName.bag] = bagNames.rightBag, -- bag
 }
 
 local function BagItemSorter(a, b)
@@ -94,6 +104,7 @@ function Serenity_BagsV2:OnSave(eType)
 	if eType == GameLib.CodeEnumAddonSaveLevel.Character then
 		return {
 			savedBagNames = SavedItemCategories,
+			savedTheme = currentTheme,
 		}
 	end
 	
@@ -107,6 +118,10 @@ function Serenity_BagsV2:OnRestore(eType, tSavedData)
 		end
 		
 		SavedItemCategories = tSavedData.savedBagNames
+		
+		if (savedTheme) then
+			currentTheme = savedTheme
+		end
 	end	
 end
 
@@ -305,7 +320,7 @@ function Serenity_BagsV2:CloseBag()
 	self.frame:Show(false)
 	
 	-- memory handling
-	self.frame:FindChild("BagContainerR"):DestroyChildren()
+	self.frame:FindChild(bagNames.rightBag):DestroyChildren()
 		
 	self.frame:FindChild("EmptyBag"):MarkAllItemsAsSeen()
 	
@@ -384,8 +399,8 @@ function Serenity_BagsV2:ResetBagContainers()
 	
 	if (itemCat == nil) then return end
 	
-	local bagContL = self.frame:FindChild("BagContainerL")
-	local bagContR = self.frame:FindChild("BagContainerR")
+	local bagContL = self.frame:FindChild(bagNames.leftBag)
+	local bagContR = self.frame:FindChild(bagNames.rightBag)
 	bagContL:DestroyChildren()
 	bagContR:DestroyChildren()
 	for i, v in pairs(itemCat) do
@@ -393,10 +408,12 @@ function Serenity_BagsV2:ResetBagContainers()
 		if (CatToBag[i]) then
 			bag = Apollo.LoadForm(self.xmlDoc, "BagContainer", self.frame:FindChild(CatToBag[i]), self)
 		else 
-			bag = Apollo.LoadForm(self.xmlDoc, "BagContainer", self.frame:FindChild("BagContainerL"), self)
+			bag = Apollo.LoadForm(self.xmlDoc, "BagContainer", self.frame:FindChild(bagNames.leftBag), self)
 		end
 
-		bag:FindChild("Name"):SetText(v[2])
+		if (i ~= FamilyCodeToName.armor) then
+			bag:FindChild("Name"):SetText(v[2])
+		end
 		bag:SetData(v[2])
 	
 		self:AddItemListToBag(bag, i, #v[1])
@@ -406,8 +423,8 @@ function Serenity_BagsV2:ResetBagContainers()
 end
 
 function Serenity_BagsV2:ArrangeBagContainers()
-	local bagContR = self.frame:FindChild("BagContainerR")
-	local bagContL = self.frame:FindChild("BagContainerL")
+	local bagContR = self.frame:FindChild(bagNames.rightBag)
+	local bagContL = self.frame:FindChild(bagNames.leftBag)
 
 	local RItems = bagContR:GetChildren()
 	local LItems = bagContL:GetChildren()
