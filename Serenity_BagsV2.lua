@@ -474,7 +474,17 @@ function Serenity_BagsV2:GetBagSortingAlgorithm(catCode)
 		end
 		return false
 	end
-
+	
+	function ByName(a, b)
+		if (a:GetName() < b:GetName()) then
+			return -1
+		elseif (a:GetName() > b:GetName()) then
+			return 1
+		else
+			return 0
+		end
+	end
+	
 	if (contains(catCode)) then
 		if catCode == FamilyCodeToName.armor then
 			return function(a, b) -- armor
@@ -485,19 +495,19 @@ function Serenity_BagsV2:GetBagSortingAlgorithm(catCode)
 					elseif SavedItemCategories[b:GetItemId()] then
 						return -1
 					elseif (a:GetItemFamily() == FamilyCodeToName.armor and b:GetItemFamily() == FamilyCodeToName.armor) then
-						return a:GetName() < b:GetName()
+						return ByName(a, b)
 					elseif (a:GetItemFamily() == FamilyCodeToName.armor) then
 						return -1
 					elseif (b:GetItemFamily() == FamilyCodeToName.armor) then
 						return 1
 					elseif (a:GetItemFamily() == FamilyCodeToName.gear and b:GetItemFamily() == FamilyCodeToName.gear) then
-						return a:GetName() < b:GetName()
+						return ByName(a, b)
 					elseif (a:GetItemFamily() == FamilyCodeToName.gear) then
 						return -1
 					elseif (b:GetItemFamily() == FamilyCodeToName.gear) then
 						return 1
 					elseif (a:GetItemFamily() == FamilyCodeToName.weapon and b:GetItemFamily() == FamilyCodeToName.weapon) then
-						return a:GetName() < b:GetName()
+						return ByName(a, b)
 					elseif (a:GetItemFamily() == FamilyCodeToName.weapon) then
 						return -1
 					elseif (b:GetItemFamily() == FamilyCodeToName.weapon) then
@@ -509,13 +519,13 @@ function Serenity_BagsV2:GetBagSortingAlgorithm(catCode)
 		else
 			return function (a,b) -- others
 					if SavedItemCategories[a:GetItemId()] and SavedItemCategories[b:GetItemId()] then
-						return 0
+						return 1
 					elseif SavedItemCategories[a:GetItemId()] then
 						return 1
 					elseif SavedItemCategories[b:GetItemId()] then
 						return -1
 					elseif (a:GetItemFamily() == catCode and b:GetItemFamily() == catCode) then
-						return a:GetName() < b:GetName()
+						return ByName(a, b)
 					elseif (a:GetItemFamily() == catCode) then
 						return -1
 					else
