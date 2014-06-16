@@ -361,7 +361,7 @@ function Serenity_BagsV2:ResetMainBar()
 end
 
 function Serenity_BagsV2:CollectBagItems()
-if (GameLib.GetPlayerUnit()) then
+	if (GameLib.GetPlayerUnit()) then
 		local items = GameLib.GetPlayerUnit():GetInventoryItems()
 	
 		local categories = {}
