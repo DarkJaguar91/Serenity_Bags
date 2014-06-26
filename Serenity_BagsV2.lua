@@ -252,8 +252,8 @@ function Serenity_BagsV2:OnSystemBeginDragDrop(wndSource, strType, iData)
 	self.frame:FindChild("TextActionPrompt_Salvage"):Show(false)
 	self.frame:FindChild("TextActionPrompt_Spec"):Show(false)
 
-	self.frame:FindChild("TrashIcon"):SetSprite("CRB_Inventory:InvBtn_TrashTogglePressed")
-	self.frame:FindChild("SpecIcon"):SetSprite("CRB_Inventory:InvBtn_ModifyTogglePressed")
+	self.frame:FindChild("TrashIcon"):SetSprite("SerenitySprite:BinReady")
+	self.frame:FindChild("SpecIcon"):SetSprite("SerenitySprite:CustomBagReady")
 
 	Sound.Play(Sound.PlayUI45LiftVirtual)
 end
@@ -263,8 +263,8 @@ function Serenity_BagsV2:OnSystemEndDragDrop(strType, iData)
 		return -- TODO Investigate if there are other types
 	end
 
-	self.frame:FindChild("TrashIcon"):SetSprite("CRB_Inventory:InvBtn_TrashToggleNormal")
-	self.frame:FindChild("SpecIcon"):SetSprite("CRB_Inventory:InvBtn_ModifyToggleNormal")
+	self.frame:FindChild("TrashIcon"):SetSprite("SerenitySprite:BinNorm")
+	self.frame:FindChild("SpecIcon"):SetSprite("SerenitySprite:CustomBagNorm")
 	self.frame:FindChild("TextActionPrompt_Trash"):Show(false)
 	self.frame:FindChild("TextActionPrompt_Salvage"):Show(false)
 	self.frame:FindChild("TextActionPrompt_Spec"):Show(false)
@@ -631,10 +631,10 @@ end
 
 function Serenity_BagsV2:OnDragDropHoverTrash( wndHandler, wndControl, bMe )
 	if bMe then
-		self.frame:FindChild("TrashIcon"):SetSprite("CRB_Inventory:InvBtn_TrashToggleFlyby")
+		self.frame:FindChild("TrashIcon"):SetSprite("SerenitySprite:BinHover")
 		self.frame:FindChild("TextActionPrompt_Trash"):Show(true)
 	else
-		self.frame:FindChild("TrashIcon"):SetSprite("CRB_Inventory:InvBtn_TrashTogglePressed")
+		self.frame:FindChild("TrashIcon"):SetSprite("SerenitySprite:BinReady")
 		self.frame:FindChild("TextActionPrompt_Trash"):Show(false)
 	end
 end
@@ -695,10 +695,10 @@ end
 
 function Serenity_BagsV2:OnDragDropHoverSpec( wndHandler, wndControl, bMe )
 	if bMe then
-		self.frame:FindChild("SpecIcon"):SetSprite("CRB_Inventory:InvBtn_ModifyToggleFlyby")
+		self.frame:FindChild("SpecIcon"):SetSprite("SerenitySprite:CustomBagHover")
 		self.frame:FindChild("TextActionPrompt_Spec"):Show(true)
 	else
-		self.frame:FindChild("SpecIcon"):SetSprite("CRB_Inventory:InvBtn_ModifyTogglePressed")
+		self.frame:FindChild("SpecIcon"):SetSprite("SerenitySprite:CustomBagReady")
 		self.frame:FindChild("TextActionPrompt_Spec"):Show(false)
 	end
 end

@@ -3,4 +3,25 @@
     <Sprite Name="Blockout" Cycle="1">
         <Frame Texture="UI\Assets\Textures\UI_BK3_Holo_InsetFramed_Darker.tex" x0="14" x1="14" x2="14" x3="14" x4="54" x5="54" y0="14" y1="14" y2="14" y3="14" y4="53" y5="53" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
     </Sprite>
+    <Sprite Name="CustomBagNorm" Cycle="1">
+        <Frame Texture="UI\Assets\TexPieces\UI_CRB_InventoryToggles_TEMP_0_74.tex" x0="0" x1="0" x2="0" x3="0" x4="34" x5="34" y0="4" y1="4" y2="4" y3="4" y4="37" y5="37" Stretchy="1" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+    </Sprite>
+    <Sprite Name="CustomBagReady" Cycle="1">
+        <Frame Texture="UI\Assets\TexPieces\UI_CRB_InventoryToggles_TEMP_0_74.tex" x0="33" x1="33" x2="33" x3="33" x4="67" x5="67" y0="4" y1="4" y2="4" y3="4" y4="37" y5="37" Stretchy="1" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+    </Sprite>
+    <Sprite Name="CustomBagHover" Cycle="1">
+        <Frame Texture="UI\Assets\TexPieces\UI_CRB_InventoryToggles_TEMP_0_74.tex" x0="66" x1="66" x2="66" x3="66" x4="100" x5="100" y0="4" y1="4" y2="4" y3="4" y4="37" y5="37" Stretchy="1" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+    </Sprite>
+    <Sprite Name="BinNorm" Cycle="1">
+        <Frame Texture="UI\Assets\TexPieces\UI_CRB_InventoryToggles_TEMP_0_37.tex" x0="0" x1="0" x2="0" x3="0" x4="34" x5="34" y0="4" y1="4" y2="4" y3="4" y4="37" y5="37" Stretchy="1" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+    </Sprite>
+    <Sprite Name="BinReady" Cycle="1">
+        <Frame Texture="UI\Assets\TexPieces\UI_CRB_InventoryToggles_TEMP_0_37.tex" x0="33" x1="33" x2="33" x3="33" x4="67" x5="67" y0="4" y1="4" y2="4" y3="4" y4="37" y5="37" Stretchy="1" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+    </Sprite>
+    <Sprite Name="BinHover" Cycle="1">
+        <Frame Texture="UI\Assets\TexPieces\UI_CRB_InventoryToggles_TEMP_0_37.tex" x0="66" x1="66" x2="66" x3="66" x4="100" x5="100" y0="4" y1="4" y2="4" y3="4" y4="37" y5="37" Stretchy="1" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+    </Sprite>
+    <Sprite Name="NewSprite" Cycle="1">
+        <Frame Texture="UI\Assets\TexPieces\UI_CRB_InventoryToggles_TEMP_0_74.tex" x0="0" x1="0" x2="0" x3="0" x4="0" x5="0" y0="0" y1="0" y2="0" y3="0" y4="0" y5="0" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+    </Sprite>
 </Sprites>
