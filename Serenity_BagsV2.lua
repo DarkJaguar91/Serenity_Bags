@@ -13,14 +13,12 @@ local Serenity_BagsV2 = {}
 -----------------------------------------------------------------------------------------------
 -- Constants
 -----------------------------------------------------------------------------------------------
+local version = "V3.1"
 local cCurrenciesSize = {["width"] = 220, ["height"] = 133}
+local squareSize = 30
+local containerWidth = 336
+local showDefault = true
 local SavedItemCategories = {}
-
-local bagTheme = {
-	serenity = 1,
-	adiBags = 2,
-}
-local currentTheme = bagTheme.serenity
 
 local FamilyCodeToName = {
 	armor = 1,
@@ -104,7 +102,7 @@ function Serenity_BagsV2:OnSave(eType)
 	if eType == GameLib.CodeEnumAddonSaveLevel.Character then
 		return {
 			savedBagNames = SavedItemCategories,
-			savedTheme = currentTheme,
+			savedVersion = version,
 		}
 	end
 	
@@ -117,11 +115,10 @@ function Serenity_BagsV2:OnRestore(eType, tSavedData)
 			return
 		end
 		
+		if (tSavedData.savedVersion ~= version) then return end
+		
 		SavedItemCategories = tSavedData.savedBagNames
 		
-		if (savedTheme) then
-			currentTheme = savedTheme
-		end
 	end	
 end
 
@@ -189,10 +186,6 @@ function Serenity_BagsV2:OnDocLoaded()
 
 	self.frame = Apollo.LoadForm(self.xmlDoc, "MainBagForm", nil, self)
 	self.frame:Show(false, true)
-	
-	-- set sort of bag
-	self.frame:FindChild("EmptyBag"):SetSort(true)
-	self.frame:FindChild("EmptyBag"):SetItemSortComparer(BagItemSorter)
 end
 
 -----------------------------------------------------------------------------------------------
@@ -203,7 +196,7 @@ function Serenity_BagsV2:OnInterfaceMenuListHasLoaded()
 end
 
 function Serenity_BagsV2:OnWindowManagementReady()
-	Event_FireGenericEvent("WindowManagementAdd", {wnd = self.frame, strName = Apollo.GetString("Serenity_BagsV2")})
+	Event_FireGenericEvent("WindowManagementAdd", {wnd = self.frame, strName = Apollo.GetString("Serenity_Bags"..version)})
 end
 
 function Serenity_BagsV2:OnToggleVisibility()
@@ -253,8 +246,10 @@ function Serenity_BagsV2:OnSystemBeginDragDrop(wndSource, strType, iData)
 	self.frame:FindChild("TextActionPrompt_Spec"):Show(false)
 
 	self.frame:FindChild("TrashIcon"):SetSprite("SerenitySprite:BinReady")
+	self.frame:FindChild("DeleteContainer"):Show(true)
 	self.frame:FindChild("SpecIcon"):SetSprite("SerenitySprite:CustomBagReady")
-
+	self.frame:FindChild("SpecContainer"):Show(true)
+	
 	Sound.Play(Sound.PlayUI45LiftVirtual)
 end
 
@@ -265,6 +260,9 @@ function Serenity_BagsV2:OnSystemEndDragDrop(strType, iData)
 
 	self.frame:FindChild("TrashIcon"):SetSprite("SerenitySprite:BinNorm")
 	self.frame:FindChild("SpecIcon"):SetSprite("SerenitySprite:CustomBagNorm")
+	self.frame:FindChild("DeleteContainer"):Show(false)
+	self.frame:FindChild("SpecContainer"):Show(false)
+	
 	self.frame:FindChild("TextActionPrompt_Trash"):Show(false)
 	self.frame:FindChild("TextActionPrompt_Salvage"):Show(false)
 	self.frame:FindChild("TextActionPrompt_Spec"):Show(false)
@@ -322,7 +320,7 @@ function Serenity_BagsV2:CloseBag()
 	-- memory handling
 	self.frame:FindChild(bagNames.rightBag):DestroyChildren()
 		
-	self.frame:FindChild("EmptyBag"):MarkAllItemsAsSeen()
+	self.frame:FindChild("MainBag"):MarkAllItemsAsSeen()
 	
 	Sound.Play(Sound.PlayUIBagClose)
 end
@@ -333,27 +331,36 @@ function Serenity_BagsV2:ResetAll()
 end
 
 function Serenity_BagsV2:ResetMainBar()
+	-- get number bags slots available
+	local numSlots = self.frame:FindChild("MainBag"):GetTotalBagSlots()
+	
+	-- set bag data
+	local numPerRow = math.floor((containerWidth-6) / squareSize)
+	local numRows = math.ceil(numSlots/numPerRow)
+	Print(numPerRow)
+	Print(numRows)
+	Print(numSlots)
+	self.frame:FindChild("MainBag"):SetSquareSize(squareSize)
+	self.frame:FindChild("MainBag"):SetBoxesPerRow(numPerRow)
+	self.frame:FindChild("MainBag"):SetAnchorOffsets(-numPerRow*squareSize-3,-numRows*squareSize-36, -3, -36)
+
+	-- set sizes according to chosen values
+	local l, t, r, b = self.frame:GetAnchorOffsets()
+	l = r - containerWidth
+	t = b - 39 - (squareSize * math.ceil(numSlots/numPerRow))
+	self.frame:SetAnchorOffsets(l, t, r ,b)
+	self.frame:FindChild("BagContainerL"):GetAnchorOffsets(-containerWidth, -50, 0, 0)
+	self.frame:FindChild("BagContainerR"):GetAnchorOffsets(-containerWidth, -50, 0, 0)
+
+	-- set char currency
 	self.frame:FindChild("Currency"):SetAmount(GameLib.GetPlayerCurrency():GetAmount())
 	
-	-- empty bag frame
-	local emptyBagFrame = self.frame:FindChild("EmptyBag")
-	if (emptyBagFrame:GetTotalEmptyBagSlots() > 0) then
-		local totalBagSlots = emptyBagFrame:GetTotalBagSlots()
-		local y = (totalBagSlots-1) * 29
-		
-		emptyBagFrame:SetAnchorPoints(0,0,1,1)
-		emptyBagFrame:SetAnchorOffsets(0,-y,0,0)
-		emptyBagFrame:Show(true)
-	else
-		emptyBagFrame:Show(false)
-	end
-	self.frame:FindChild("NumberSlotsEmpty"):SetText(tostring(emptyBagFrame:GetTotalEmptyBagSlots()))
-	
+	-- set bag icons, tooltips and space numbers
 	for i = 1, 4 do
 		local wnd = self.frame:FindChild("Bag" .. i)
-		if self.frame:FindChild("EmptyBag"):GetBagItem(i) and wnd:GetItem() then
+		if self.frame:FindChild("MainBag"):GetBagItem(i) and wnd:GetItem() then
 			wnd:FindChild("Number"):SetText(wnd:GetItem():GetBagSlots())
-			Tooltip.GetItemTooltipForm(self, wnd, self.frame:FindChild("EmptyBag"):GetBagItem(i), {bPrimary = true, bSelling = false, itemCompare = itemEquipped})
+			Tooltip.GetItemTooltipForm(self, wnd, self.frame:FindChild("MainBag"):GetBagItem(i), {bPrimary = true, bSelling = false, itemCompare = itemEquipped})
 		else
 			wnd:FindChild("Number"):SetText("")
 		end
