@@ -13,8 +13,32 @@ local Serenity_Bags3 = {}
 -----------------------------------------------------------------------------------------------
 -- Constants
 -----------------------------------------------------------------------------------------------
--- e.g. local kiExampleVariableMax = 999
- 
+local EnumSortedType = {
+	tabbed = 1,
+}
+
+local EnumAnchorPoint = {
+	none = 1,
+	top = 2,
+	left = 3,
+	right = 4,
+	bot = 5,
+}
+
+function pairsByKeys (t, f)
+	local a = {}
+	for n in pairs(t) do table.insert(a, n) end
+		table.sort(a, f)
+		local i = 0      -- iterator variable
+		local iter = function ()   -- iterator function
+		i = i + 1
+		if a[i] == nil then return nil
+        else return a[i], t[a[i]]
+ 		end
+ 	end
+ 	return iter
+ end
+
 -----------------------------------------------------------------------------------------------
 -- Initialization
 -----------------------------------------------------------------------------------------------
@@ -85,6 +109,9 @@ end
 -----------------------------------------------------------------------------------------------
 function Serenity_Bags3:OnDocLoaded()
 	if self.xmlDoc ~= nil and self.xmlDoc:IsLoaded() then
+		-- load sprite
+		Apollo.LoadSprites("Serenity3Sprite.xml", "Serenity3Sprite")
+	
 		-- UI integration
 		--Apollo.RegisterEventHandler("WindowManagementReady", "OnWindowManagementReady", self)
 	
@@ -98,6 +125,16 @@ function Serenity_Bags3:OnDocLoaded()
 		if (self.mainBagSquareSize == nil) then
 			self.mainBagSquareSize = 30
 		end
+		if (self.sortedBagSquareSize == nil) then
+			self.sortedBagSquareSize = 30
+		end
+		if (self.sortedType == nil) then
+			self.sortedType = EnumSortedType.tabbed
+		end
+		if (self.attachedLocations == nil) then
+			self.anchorPoint = EnumAnchorPoint.top
+		end
+		
 		
 	    self.mainBag = Apollo.LoadForm(self.xmlDoc, "MainBag", nil, self)
 	    self.mainBag:Show(false, true)
@@ -133,6 +170,7 @@ function Serenity_Bags3:OnToggleInventory()
 	else
 		self.mainBag:Show(true)
 		self:ResetMainBag()
+		self:ResetSortedBags()
 	end
 end
 
@@ -144,6 +182,27 @@ function Serenity_Bags3:ResetMainBag()
 	self:ResetBagItems()
 	self:ResetCurrency()
 	self:ResizeMainBagWindow()
+end
+
+function Serenity_Bags3:ResetSortedBags()
+	self:DestroySortedBags()
+	if (self.sortedType == EnumSortedType.tabbed)then
+		self:CreateTabbedBagSystem()
+	end
+end
+
+function Serenity_Bags3:DestroySortedBags()
+	if (self.sortedBags) then
+		if (type(self.sortedBags) == "table") then
+			for i, v in pairs(self.sortedBags) do
+				v:Destroy()
+				v = nil
+			end
+		else
+			self.sortedBags:Destroy()
+		end
+		self.sortedBags = nil
+	end
 end
 
 function Serenity_Bags3:ResizeMainBagWindow()
@@ -177,6 +236,105 @@ function Serenity_Bags3:ResetBagItems()
 	end
 end
 
+function Serenity_Bags3:MoveAndSizeObject(form, maxHeight)
+	if (self.anchorPoint == EnumAnchorPoint.none) then
+		-- TODO work this into the system
+	elseif (self.anchorPoint == EnumAnchorPoint.top) then
+		form:SetAnchorPoints(0, 0, 1, 0)
+		form:SetAnchorOffsets(0, -maxHeight, 0, 0)
+	elseif (self.anchorPoint == EnumAnchorPoint.left) then
+		form:SetAnchorPoints(0, 1, 0, 1)
+		form:SetAnchorOffsets(-self.mainBag:GetWidth(), -maxHeight, 0, 0)
+	elseif (self.anchorPoint == EnumAnchorPoint.right) then
+		form:SetAnchorPoints(1, 0, 1, 0)
+		form:SetAnchorOffsets(0, -maxHeight, self.mainBag:GetWidth(), 0)
+	elseif (self.anchorPoint == EnumAnchorPoint.bot) then
+		form:SetAnchorPoints(0, 0, 1, 0)
+		form:SetAnchorOffsets(0, 0, 0, maxHeight)
+	end
+end
+
+function Serenity_Bags3:CreateTabbedBagSystem()
+	if (self.anchorPoint == EnumAnchorPoint.none) then
+		self.sortedBags = Apollo.LoadForm(self.xmlDoc, "TabbedBagForm", nil, self)
+	else
+		self.sortedBags = Apollo.LoadForm(self.xmlDoc, "TabbedBagForm", self.mainBag, self)
+	end
+	
+	local bagValues = self:CollectBagDetails()
+	
+	-- determine max
+	local max = 0
+	for i, v in pairs(bagValues) do
+		local height = self:CalculateBagHeight(v[1], self.mainBag:GetWidth(), 10, self.sortedBagSquareSize) + 20
+		if max < height then max = height end
+	end
+	
+	self:MoveAndSizeObject(self.sortedBags, max)
+	
+	-- add all the tabs
+	local firstTab = nil
+	for i, v in pairsByKeys(bagValues) do
+		local tabbedBag = Apollo.LoadForm(self.xmlDoc, "TabbedBag", self.sortedBags, self)
+		
+		tabbedBag:SetText(i)
+		
+		local bagItem = tabbedBag:FindChild("BagWindow")
+		
+		bagItem:SetSquareSize(self.sortedBagSquareSize, self.sortedBagSquareSize)
+		bagItem:SetSort(true)
+		bagItem:SetItemSortComparer(
+			function(a,b) 
+				if a:GetItemFamily() == v[2] and b:GetItemFamily() == v[2] then
+					return 0
+				elseif a:GetItemFamily() == v[2] then
+					return -1
+				else
+					return 1
+				end
+			end
+		)
+		
+		local height, rowItems, rows = self:CalculateBagHeight(v[1], self.mainBag:GetWidth(), 10, self.sortedBagSquareSize)
+		local padding = bagItem:GetWidth() - rowItems * (self.sortedBagSquareSize + 1) + 1
+		padding = padding / 2
+		bagItem:FindChild("Blocker"):SetAnchorOffsets(-(rowItems-v[1]) * (self.sortedBagSquareSize+1) - padding, -rows * (self.sortedBagSquareSize + 1) + 1, 0, 0)	
+		
+		if (firstTab) then
+			firstTab:AttachTab(tabbedBag)
+		else
+			firstTab = tabbedBag
+		end
+	end
+end
+
+function Serenity_Bags3:CollectBagDetails()
+	local items = GameLib:GetPlayerUnit():GetInventoryItems()
+	
+	local list = {}
+	
+	for i, v in pairs(items) do
+		local name = v.itemInBag:GetItemFamilyName()
+		local code = v.itemInBag:GetItemFamily()
+		
+		if (list[name]) then
+			list[name][1] = list[name][1] + 1
+		else
+			list[name] = {1, code}
+		end
+	end
+	
+	table.sort(list)
+	
+	return list
+end
+
+function Serenity_Bags3:CalculateBagHeight(items, width, padding, slotSize)
+	local numRowItems = math.floor((width - padding) / (slotSize + 1))
+	local numRows = math.ceil(items / numRowItems)
+	
+	return numRows * (slotSize + 1) + padding, numRowItems, numRows
+end
 -----------------------------------------------------------------------------------------------
 -- Serenity_Bags3Form Functions
 -----------------------------------------------------------------------------------------------
@@ -224,6 +382,7 @@ function Serenity_Bags3:SetOptionsFunctions()
 				l = r - tonumber(bagOptions:FindChild("MainBagWidthEdit"):GetText())
 				self.mainBag:SetAnchorOffsets(l,t,r,b)
 				self:ResizeMainBagWindow()
+				self:ResetSortedBags()
 			end
 		end
 	)
@@ -270,6 +429,14 @@ function Serenity_Bags3:OnMouseWheelMove( wndHandler, wndControl, nLastRelativeM
 		wndHandler:GetData()()
 	end
 	return true
+end
+
+---------------------------------------------------------------------------------------------------
+-- TabbedBag Functions
+---------------------------------------------------------------------------------------------------
+
+function Serenity_Bags3:SortedBagWindowSizeChanged( wndHandler, wndControl )
+
 end
 
 -----------------------------------------------------------------------------------------------

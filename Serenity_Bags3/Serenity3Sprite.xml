@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Sprites>
+    <Sprite Name="BlockingPane" Cycle="1">
+        <Frame Texture="UI\Assets\Textures\UI_BK3_Holo_InsetFramed_Darker.tex" x0="6" x1="6" x2="6" x3="6" x4="60" x5="60" y0="6" y1="6" y2="6" y3="6" y4="61" y5="61" Stretchy="1" HotspotX="0" HotspotY="0" Duration="1.000" StartColor="white" EndColor="white"/>
+    </Sprite>
+</Sprites>
